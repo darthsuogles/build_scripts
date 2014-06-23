@@ -1,3 +1,7 @@
 
 
 Build scripts for various software packages
+
+Each script is treated as a piece of "data", rather than a program. 
+They should be portable enough so that one can place them wherever they
+want, for example, in a project directory for building dependencies. 

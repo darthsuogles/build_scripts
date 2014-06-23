@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ver=R15B03
+ver=17.0
 
 export dtrace='~/dtrace'
 tmp_dir=/scratch1/phi/erlang
@@ -36,8 +36,8 @@ cd $ver
 
 ./configure \
     --prefix=$base_dir/$ver \
-    --build=x86_64-redhat-linux-gnu \
-    --with-dynamic-trace=systemtap
+    --build=x86_64-redhat-linux-gnu
+#    --with-dynamic-trace=systemtap
 make
 make install
 cd ..
