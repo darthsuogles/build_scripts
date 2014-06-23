@@ -5,6 +5,7 @@ ver_minor=0
 ver=$ver_major.$ver_minor
 
 # Installation directories
+base_dir=$PWD
 build_dir=/tmp/vtk
 install_dir=$PWD/$ver
 
@@ -45,4 +46,22 @@ cmake -DCMAKE_BUILD_TYPE=None -DCMAKE_INSTALL_PREFIX=$install_dir ..
 make -j8
 make install
 
-cd $install_dir
+# Now build the module file
+cd $base_dir
+
+function gen_modules()
+{
+    echo "#%Module 1.0"
+    echo "#"
+    echo "# VTK $ver"
+    echo "#"
+
+    echo "setenv VTK_HOME $install_dir"
+    echo "setenv VTK_VER $ver"
+    if [ -d $install_dir/bin ]; then
+	echo "prepend-path PATH $install_dir/bin"
+    fi
+
+    echo "prepend-path CPATH $install_dir/include/vtk-$ver_major"
+    echo "prepend-path LIBRARY_PATH $install_dir/lib/vtk-$ver_major"
+}
