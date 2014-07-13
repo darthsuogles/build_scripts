@@ -1,11 +1,12 @@
 #!/bin/bash
 
-ver_major=1.6
-ver_minor=5
+ver_major=1.8
+ver_minor=1
 ver=$ver_major.$ver_minor
 
 base_dir=$PWD
-build_dir=/scratch1/phi/openmpi
+build_dir=/tmp/phi/openmpi
+install_dir=$PWD
 
 function quit_with()
 {
@@ -34,9 +35,12 @@ function update_pkg()
 
 mkdir -p $build_dir; cd $build_dir
 update_pkg || quit_with "failed to update the package to version $ver"
+mkdir -p $install_dir/$ver
+ln -s $build_dir/$ver $install_dir/$ver/src
+exit
 
 cd $ver
-./configure --prefix=$base_dir/$ver \
+./configure --prefix=$install_dir/$ver \
     --disable-vt    
 make -j8 all
 make install
