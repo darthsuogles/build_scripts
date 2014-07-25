@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ver_major=4.8
-ver_minor=5
+ver_minor=6
 ver=$ver_major.$ver_minor
 
 tmp_dir=/scratch1/phi/qt
@@ -13,7 +13,8 @@ if [ ! -d $ver ]; then
 
     mkdir -p $tmp_dir; cd $tmp_dir
     if [ ! -e $tarball ]; then
-	wget http://download.qt-project.org/official_releases/qt/$ver_major/$ver/$tarball
+	#wget http://download.qt-project.org/official_releases/qt/$ver_major/$ver/$tarball
+	wget http://download.qt-project.org/archive/qt/$ver_major/$ver/$tarball
     fi
     echo "Uncompressing ... might take a while ... please be patient"
     fname=`tar -zxvf $tarball | sed -e 's@/.*@@' | uniq`
@@ -29,7 +30,7 @@ fi
 cd $ver
 make distclean; make clean
 ./configure -prefix $HOME/local/Trolltech/Qt-$ver \
-    -opensource -confirm-license -no-webkit -fast 
+    -opensource -confirm-license -fast 
 make -j8
 make install
 cd ..
