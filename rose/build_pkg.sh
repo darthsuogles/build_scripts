@@ -6,21 +6,6 @@ function quit_with()
     exit
 }
 
-# Find "scratch", a common name for the large local directory
-# in a HPC environment that we can mess with
-# If non is found, use /tmp
-function find_scratch_dir()
-{
-    scratch_dir=$(ls -d /* | grep -Ei ^/scratch | xargs du -s 2>/dev/null | tail -n1 | awk '{print $2}')    
-    if [ -d $scratch_dir ]; then
-	echo $scratch_dir
-    elif [ -d /tmp ]; then
-	echo /tmp
-    else
-	echo ""
-    fi
-}
-
 # Download and decompress a package specified by an url containing the tarball
 # e.g. http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.5.0.tar.gz
 function update_pkg()
@@ -42,8 +27,6 @@ function update_pkg()
 	prefix=${prefix%.*}
     elif [ "$ext" == "xz" ]; then
 	quit_with "xz extension is not supported"
-    elif [ "$ext" == "zip" ]; then
-	quit_with "zip format not supported"
     else
 	quit_with "unknown compressed tarball extension: $ext"
     fi
@@ -68,8 +51,7 @@ function update_pkg()
     echo "Uncompressing ... might take a while ... please be patient"
     fname=`tar -$args $tarball | sed -e 's@/.*@@' | uniq`    
     [ -d $fname ] || quit_with "cannot find the extracted directory"
-    #if [ "$fname" != "$ver" ]; then mv $fname $ver; fi
-    mv -T $fname $ver
+    if [ "$fname" != "$ver" ]; then mv $fname $ver; fi
     [ -d $ver ] || quit_with "failed to create directory $PWD/$ver"
 }
 

@@ -2,7 +2,7 @@
 
 rose_ver=current
 boost_ver=1.47.0
-java_libdir=/usr/lib/jvm/java-1.7.0-oracle-1.7.0.55.x86_64/jre/lib/amd64/server
+java_libdir=/usr/lib/jvm/java-1.7.0-oracle.x86_64/jre/lib/amd64/server
 
 rose_root=$PWD
 rose_ver_num=`readlink $rose_root/$rose_ver | xargs basename`

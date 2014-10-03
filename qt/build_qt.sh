@@ -30,7 +30,7 @@ fi
 cd $ver
 make distclean; make clean
 ./configure -prefix $HOME/local/Trolltech/Qt-$ver \
-    -opensource -confirm-license -fast 
+    -opensource -confirm-license -webkit -javascript-jit -fast 
 make -j8
 make install
 cd ..

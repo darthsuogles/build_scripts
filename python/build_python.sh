@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Build a python distribution with Intel MKL
-ver=2.7.6
+ver=2.7.8
 arch=gnu
 intel_root=/opt/stow/intel/composer_xe_2013/
 mkl_root=$intel_root/mkl
 
-tmp_dir=/scratch1/phi/python
+tmp_dir=/tmp/phi/python
 base_dir=$PWD
 script_name=`basename $0`
 
@@ -64,7 +64,8 @@ if [ ! -d $ver ]; then
     fname=Python-$ver
     tarball=$fname.tgz
     if [ ! -r $tarball ]; then
-	wget http://www.python.org/ftp/python/$ver/$tarball
+	url=http://www.python.org/ftp/python/$ver/$tarball
+	wget $url || wget --no-check-certificate $url
     fi    
     echo "Uncompressing ... might take a while ... please be patient"
     fname=`tar -xvzf $tarball | sed -e 's@/.*@@' | uniq`

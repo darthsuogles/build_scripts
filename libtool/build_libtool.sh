@@ -1,25 +1,18 @@
 #!/bin/bash
 
+source ../build_pkg.sh
+
 ver=2.4.2
 
-build_dir=/tmp/phi/libtool/$ver
-install_dir=$PWD/$ver
+build_dir=/scratch0/phi/libtool
+install_dir=$HOME/local
 
-function quit_with()
-{
-    echo "Error: $@, quit"
-    exit
-}
+mkdir -p $build_dir; cd $build_dir
+update_pkg http://mirror.team-cymru.org/gnu/libtool/libtool-$ver.tar.gz $ver
+mkdir -p $install_dir; ln -s $build_dir/$ver $install_dir/src
 
-if [ ! -d $install_dir ]; then
-    fname=libtool-$ver
-    tarball=$fname.tar.xz
-    if [ ! -f $tarball ]; then
-	wget http://ftp.wayne.edu/gnu/libtool/$tarball
-    fi
-    fname=`tar -Jxvf $tarball | sed -e 's@/.*@@' | uniq`
-    [ ! -z $fname ] || quit_with "failed to decompress the file"
-    if [ $fname != $install_dir ]; then mv $fname $install_dir; fi
-    rm $tarball
-fi
+cd $ver
+./configure --prefix=$install_dir
+make -j8
+make install
 
