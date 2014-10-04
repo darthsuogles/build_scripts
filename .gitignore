@@ -1,10 +1,7 @@
 # Now ignore everything (else); order is important
 *
 # All the file types you're interested in.
+# We won't depend on git's ability to only include certain files
 !.gitignore
 !update_repo.sh
-!*/build_*.sh
-!**/build_*.sh
-!*/gen_modules_*.sh
-!**/gen_modules_*.sh
 !README.org

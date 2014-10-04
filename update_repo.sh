@@ -1,5 +1,7 @@
 #!/bin/bash
 
+git add .
+
 for fname in `find $PWD -maxdepth 3 -type f  -name "build_*.sh"`; do 
     git add -f $fname
 done
