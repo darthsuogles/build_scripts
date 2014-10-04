@@ -1,6 +1,7 @@
 #!/bin/bash
 
-ver=17.1
+# Ref: http://www.erlang.org/doc/installation_guide/INSTALL.html
+ver=17.3
 
 #export dtrace='~/dtrace'
 
