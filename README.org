@@ -1,7 +1,17 @@
-
+#+TITLE: README
 
 Build scripts for various software packages
 
 Each script is treated as a piece of "data", rather than a program. 
 They should be portable enough so that one can place them wherever they
 want, for example, in a project directory for building dependencies. 
+
+This directory is usually located at "~/local/src" and the software packages
+are built inside each sub-directory under it. We find this to be most convenient.
+
+<2014-10-03 Fri>
+We have introduced some general utility files in the main directory.
+The use of these functions has effectively shortened the length of build scripts.
+
+# !+TODO: Add support for progressive modification of the build scripts
+#         with respect to different versions of the package

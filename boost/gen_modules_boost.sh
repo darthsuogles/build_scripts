@@ -2,8 +2,10 @@
 
 ver=$1
 install_dir=$2
-${ver:=1.55.0}
-${install_dir:=$PWD/$ver}
+
+src_dir=$(readlink -f ${BASH_SOURCE[0]} | xargs dirname)
+${ver:=1.56.0}
+${install_dir:=$src_dir/$ver}
 
 echo "#%Module 1.0"
 echo "#"
