@@ -1,35 +1,23 @@
 #!/bin/bash
 
-ver=24.3
+url_prefix=http://ftp.gnu.org/gnu/emacs
+tarball=$(curl -sL $url_prefix/ | perl -ne 'print "$1\n" if /(emacs-(\d+\.?)+?\.tar\.(gz|bz2))/' | sort -n | tail -n1)
 
-base_dir=$PWD
-tmp_dir=/scratch0/phi/build_tmp
+url=$url_prefix/$tarball
+ver=$(echo $tarball | perl -ne 'print $1 if /emacs-((\d+\.?)+?)\.tar/')
+[ ! -z $ver ] || ver=24.4
 
-export CFLAGS='-g -gdwarf-2'
+source ../build_pkg.sh
 
-function quit_with()
-{
-    printf "Error: [ build_emacs.sh ]"
-    printf ">>     $@"
-}
+prepare_pkg emacs $url $ver install_dir
+echo $install_dir
 
-if [ ! -d $ver ]; then
-    fname=emacs-$ver
-    tarball=$fname.tar.gz
-
-    mkdir -p $tmp_dir/emacs; cd $tmp_dir/emacs
-    if [ ! -f $tarball ]; then
-	wget http://mirror.sdunix.com/gnu/emacs/emacs-24.3.tar.gz
-    fi
-    fname=`tar -zxvf $tarball | sed -e 's@/.*@@' | uniq`
-    if [ -z $fname ]; then quit_with "failed to extract tarball"; fi
-    mv $fname $ver || quit_with "failed to rename file directory"
-    rm $tarball
-    ln -s $tmp_dir/emacs/$ver $base_dir/$ver || quit_with "cannot create symlink"
-fi
+export CC=gcc
+export CXX=g++
+export CFLAGS='-g -O3 -gdwarf-2'
 
 cd $ver
-./configure --prefix=$HOME/local \
+./configure --prefix=$install_dir \
     --without-jpeg \
     --without-png \
     --without-tiff \

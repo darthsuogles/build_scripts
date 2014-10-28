@@ -16,15 +16,7 @@ python setup.py install
 cd ..
 
 pip install cython
-
 pip install pillow
-# echo ">> PIL"
-# cd Imaging-1.1.7
-# echo "instructions obtained from https://jamie.curle.io/blog/webfaction-installing-pil/"
-# echo "modified setup.py to search jpeg, zlib and freetype"
-# python setup.py clean
-# python setup.py install
-# cd ..
 
 if [[ $arch == "intel" ]]; then
     module load intel
@@ -35,6 +27,7 @@ fi
 echo ">> numpy"
 export LD_LIBRARY_PATH=$mkl_root/lib/intel64:$LD_LIBRARY_PATH
 cd numpy/dev
+git pull
 cp ../numpy_site.cfg site.cfg
 python setup.py clean
 if [[ $arch == "intel" ]]; then
@@ -47,18 +40,20 @@ else
 fi
 cd ../..
 
-echo ">> scipy"
-cd scipy/dev
-python setup.py clean
-if [[ $arch == "intel" ]]; then
-    python setup.py config \
-	--compiler=intelem --fcompiler=intelem build_clib \
-	--compiler=intelem --fcompiler=intelem build_ext \
-	--compiler=intelem --fcompiler=intelem install
-else
-    python setup.py config build_clib build_ext install
-fi
-cd ../..
+# echo ">> scipy"
+# cd scipy/dev
+# git pull
+# python setup.py clean
+# if [[ $arch == "intel" ]]; then
+#     python setup.py config \
+# 	--compiler=intelem --fcompiler=intelem build_clib \
+# 	--compiler=intelem --fcompiler=intelem build_ext \
+# 	--compiler=intelem --fcompiler=intelem install
+# else
+#     python setup.py config build_clib build_ext install
+# fi
+# cd ../..
+pip install scipy
 
 echo "Install the rest"
 pip install ipython

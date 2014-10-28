@@ -11,15 +11,16 @@ function quit_with()
 # If non is found, use /tmp
 function find_scratch_dir()
 {
-    scratch_dir=$(df -P /scratch* /tmp* /temp* 2>/dev/null | awk '{print $3"\t"$6}' | tail -n +2 | sort | tail -n1 | awk '{print $2}') 
+    scratch_dir=$(df -P /scratch* /tmp* /temp* 2>/dev/null | awk '{print $4"\t"$6}' | tail -n +2 | sort | tail -n1 | awk '{print $2}') 
     [ -d $scratch_dir ] || scratch_dir='./tmp'
     echo "$scratch_dir"
 }
 
 function check_tarball()
 {
-    [ $# -eq 1 ] || quit_with "[check_tarball] usage: <tarball>"
+    [ $# -eq 2 ] || quit_with "[check_tarball] usage: <tarball> <args_var>"
     local tarball=$1
+    local _res_var=$2
 
     ext=${tarball##*.}
     prefix=${tarball%.*}
@@ -38,6 +39,8 @@ function check_tarball()
     else
 	quit_with "unknown compressed tarball extension: $ext"
     fi
+
+    eval $_res_var="'$args'"
 }
 
 # Download and decompress a package specified by an url containing the tarball
@@ -50,7 +53,12 @@ function fetch_tarball()
     local ver=$2
     local _res_var=$3
 
-    tarball=`basename $url`
+    #tarball=$(curl -sIkL $url | perl -ne 'if ($_ =~ /\/([^\/]+?\.(gz|bz2|tgz|tbz2))/) { print $1 }')
+    tarball=$(echo $url | perl -pe '/.*\.(gz|bz2|tgz|tbz2)/')
+    [ ! -z "$tarball" ] || tarball=$(curl -sIkL $url | perl -ne 'print $1 if (/\/([^\/]+?\.(gz|bz2|tgz|tbz2))/)')
+    tarball=$(basename $tarball)
+    echo "tarball name resolved as $tarball"
+
     ext=${tarball##*.}
     prefix=${tarball%.*}
     if [ "$ext" == "tgz" ]; then 
@@ -84,7 +92,7 @@ function fetch_tarball()
 	#     # REF: https://bugzilla.redhat.com/show_bug.cgi?id=1098711
 	#     wget --ca-certificate=/etc/pki/tls/cert.pem $url
 	wget $url
-	[ -f $tarball ] || quit_with "failed to download $tarball"
+	[ -f $tarball ] || quit_with "failed to download [ $tarball ]"
     fi
 
     # Store the value of the return variable
@@ -103,6 +111,11 @@ function update_pkg()
     [ $# -eq 2 ] || "[update_pkg] usage: <fpath> <ver>"
     local fpath=$1
     local ver=$2
+    if [ -d $ver ]; then
+	echo "$ver already exists"
+	return
+    fi
+
     if [ ! -z "$(echo $fpath | grep -Ei '^(http(s)*|ftp)\:\/\/')" ]; then
 	echo "Extracting a tarball from the url address $fpath"
 	fetch_tarball $fpath $ver tarball
@@ -113,14 +126,16 @@ function update_pkg()
 	echo $tarball_fpath
 	echo $tarball
 	[ -f $tarball ] || mv $tarball_fpath ./$tarball
-	check_tarball $tarball
     fi
 
+    check_tarball $tarball tar_args
+    
     echo "Uncompressing ... might take a while ... please be patient"
-    fname=`tar -$args $tarball | sed -e 's@/.*@@' | uniq`    
+    fname=`tar -$tar_args $tarball | sed -e 's@/.*@@' | uniq`    
     [ -d $fname ] || quit_with "[update_pkg]: cannot find the extracted directory"
-    mv -T $fname $ver
+    [ "$fname" == "$ver" ] || mv $fname $ver
     [ -d $ver ] || quit_with "[update_pkg]: failed to create directory $PWD/$ver"
+    rm $tarball
 }
 
 function prepare_pkg()
@@ -132,13 +147,15 @@ function prepare_pkg()
     local _res_var=$4
 
     tmp_dir=`find_scratch_dir`
+    [ $? -eq 0 ] || quit_with "failed to find a scratch dir"
     build_dir=$tmp_dir/phi/$pkg_name
     install_dir=$PWD/$pkg_ver
 
     echo "Moving to build dir $build_dir"
     mkdir -p $build_dir; cd $build_dir
     update_pkg $pkg_fpath $pkg_ver
-    ln -s $build_dir/$ver $install_dir/src
+    mkdir -p $install_dir
+    ln -sf $build_dir/$ver $install_dir/src
 
     # Set the install dir to the return value
     eval $_res_var="'$install_dir'"
