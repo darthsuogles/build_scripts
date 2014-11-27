@@ -1,5 +1,21 @@
 #+TITLE: README
 
+<2014-11-26 Wed>
+The latest version features 
+1. Common functionalities are all aggregated into the main directory file =build_pkg.sh=. 
+   All subsequnt build scripts should simply *source* this file and call
+   the function
+   #+BEGIN_SRC sh
+     # In <some_pkg> directory 
+     ver=<some_pkg_version>
+     source ../build_pkg.sh
+     prepare_pkg <some_pkg> <some_pkg_tarball_url> $ver install_dir
+     
+     cd $ver
+     # Do the build stuffs for <some_package>
+     # Installation directory is stored in $install_dir     
+   #+END_SRC
+
 Build scripts for various software packages
 
 Each script is treated as a piece of "data", rather than a program. 
