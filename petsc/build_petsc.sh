@@ -40,6 +40,7 @@ fi
 prepare_pkg petsc http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-$ver.tar.gz $ver install_dir
 echo "PETSc will be installed to $install_dir"
 [ "$base_dir" != "PWD" ] || quit_with "[build_petsc] failed to get to a temporary build dir"
+install_dir=$install_dir/$arch
 
 # Add the version string to PETSC_ARCH
 cd $ver
@@ -54,6 +55,7 @@ echo "Temporarily setting up PETSC_DIR to the tmp build dir $PETSC_DIR"
     --with-openmpi=1 \
     --download-fblaslapack \
     --download-scalapack \
+    --download-metis --download-parmetis \
     ${CUDA_CONFIG}
 make all test
 make install

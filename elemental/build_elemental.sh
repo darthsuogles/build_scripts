@@ -1,51 +1,22 @@
 #!/bin/bash
 
-ver=0.82-p1
+ver=0.84
 
 module load intel
 BLAS_LIBS="-L$MKLROOT/lib/intel64  -lmkl_rt -lpthread -lm"
 BLAS_INC="-I$MKLROOT/include"
 module unload intel
 
-function exit_with()
-{
-    #printf "Error: %s\n" $@; 
-    echo "Error: $@, quit now" 
-    exit    
-}
+source ../build_pkg.sh
+prepare_pkg elemental http://libelemental.org/pub/releases/Elemental-$ver.tgz $ver install_dir
 
-if [ ! -d $ver ]; then
-    fname=elemental-$ver
-    tarball=$fname.tgz
-    if [ ! -e $tarball ]; then
-	wget http://libelemental.org/pub/releases/$tarball || \
-	    exit_with "cannot download tarball"
-    fi
-    fname=`tar -ztf $tarball | sed -e "s@/.*@@" | uniq`
-    if [ -z $fname || ! -d $fname ]; then 
-	exit_with "cannot decompress the package $tarball"
-    fi
-    tar -zxvf $tarball
-    mv $fname $ver
-fi
+mkdir -p build-tree-$ver; cd build-tree-$ver
 
-cd $ver
-rm -fr build-tree; mkdir -p build-tree; cd build-tree
+CC=gcc CXX=g++ FC=gfortran cmake ../$ver \
+    -DCMAKE_INSTALL_PREFIX=$install_dir \
+    -DCFLAGS="$BLAS_INC" \
+    -DCXX_FLAGS="-std=c++11 $BLAS_INC" \
+    -DMATH_LIBS="$BLAS_LIBS -lgfortran"
 
-# Error: this option is no-longer available
-exit_with "the required toolchain is not built yet"
-module load gcc48/openmpi-openib/1.6.4
-
-export CC=`which gcc`
-export CXX=`which g++`
-export FC=`which gfortran`
-cmake \
-    -D CMAKE_INSTALL_PREFIX=$PWD/install \
-    -D CFLAGS="$BLAS_INC" \
-    -D CXX_FLAGS="-std=c++11 $BLAS_INC" \
-    -D MATH_LIBS="$BLAS_LIBS -lgfortran" \
-    ..
 make -j8
 make install
-cd ..
-cd ..

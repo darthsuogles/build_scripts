@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Ref: http://www.erlang.org/doc/installation_guide/INSTALL.html
-ver=17.3
+#ver=${1:-17.3}
+ver=R16B03-1
+#http://www.erlang.org/download/otp_src_R16B03-1.tar.gz
 
 #export dtrace='~/dtrace'
 
