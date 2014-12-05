@@ -10,5 +10,6 @@ ver=$1
 #dirname $module_file | xargs mkdir -p 
 
 print_header erlang "$ver" 
+print_modline "setenv ERLANG_VER $ver"
+print_modline "setenv ERLANG_HOME $PWD/$ver"
 print_modline "prepend-path PATH $PWD/$ver/bin" 
-

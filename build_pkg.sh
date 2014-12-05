@@ -155,7 +155,7 @@ function prepare_pkg()
     mkdir -p $build_dir; cd $build_dir
     update_pkg $pkg_fpath $pkg_ver
     mkdir -p $install_dir
-    ln -sf $build_dir/$ver $install_dir/src
+    [ -d $install_dir/src ] || ln -sf $build_dir/$ver $install_dir/src
 
     # Set the install dir to the return value
     eval $_res_var="'$install_dir'"

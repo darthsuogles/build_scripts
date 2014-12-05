@@ -1,20 +1,20 @@
 #!/bin/bash
 
-ver=2.5.0
+#ver=2.5.0
+ver=${1:-2.6.1}
 
-build_dir=/tmp/protobuf
-install_dir=$PWD/$ver
+tarball=v$ver.tar.gz
+if [ ! -f $tarball ]; then
+    wget https://github.com/google/protobuf/archive/$tarball
+    [ -f $tarball ] || mv v$ver $tarball
+fi
+
 
 source ../build_pkg.sh
-
-mkdir -p $build_dir; cd $build_dir
-update_pkg https://protobuf.googlecode.com/files/protobuf-$ver.tar.bz2 $ver
-[ -d $build_dir/$ver ] || quit_with "failed to fetch the source"
+prepare_pkg protobuf $PWD/v2.6.1.tar.gz $ver install_dir
 
 cd $ver
+[ -f configure ] || ./autogen.sh
 ./configure --prefix=$install_dir
 make -j8
 make install
-
-ln -s $build_dir/$ver $install_dir/src
-cd $install_dir
