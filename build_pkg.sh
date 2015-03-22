@@ -24,7 +24,9 @@ function check_tarball()
 
     ext=${tarball##*.}
     prefix=${tarball%.*}
-    if [ "$ext" == "tgz" ]; then 
+    if [ "$ext" == "tar" ]; then
+	args=xvf
+    elif [ "$ext" == "tgz" ]; then 
 	args=zxvf
     elif [ "$ext" == "gz" ] && [ ${prefix##*.} == "tar" ]; then 
 	args=zxvf
@@ -32,8 +34,12 @@ function check_tarball()
     elif [ "$ext" == "bz2" ] && [ ${prefix##*.} == "tar" ]; then
 	args=jxvf
 	prefix=${prefix%.*}
-    elif [ "$ext" == "xz" ]; then
-	quit_with "xz extension is not supported"
+    elif [ "$ext" == "xz" ] && [ ${prefix##*.} == "tar" ]; then
+	[ ! -z `which unxz 2> /dev/null` ] || quit_with "xz extension is not supported"
+	unxz < ${tarball} > ${prefix}
+	tarball=$prefix
+	args=xvf
+	prefix=${prefix%.*}
     elif [ "$ext" == "zip" ]; then
 	quit_with "zip format not supported"
     else
@@ -69,8 +75,12 @@ function fetch_tarball()
     elif [ "$ext" == "bz2" ] && [ ${prefix##*.} == "tar" ]; then
 	args=jxvf
 	prefix=${prefix%.*}
-    elif [ "$ext" == "xz" ]; then
-	quit_with "xz extension is not supported"
+    elif [ "$ext" == "xz" ] && [ ${prefix##*.} == "tar" ]; then
+	[ ! -z `which unxz 2> /dev/null` ] || quit_with "xz extension is not supported"
+	unxz < ${tarball} > ${prefix}
+	args=xvf
+	tarball=$prefix
+	prefix=${prefix%.*}
     elif [ "$ext" == "zip" ]; then
 	quit_with "zip format not supported"
     else
