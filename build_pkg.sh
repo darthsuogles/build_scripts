@@ -82,7 +82,9 @@ function fetch_tarball()
 	tarball=$prefix
 	prefix=${prefix%.*}
     elif [ "$ext" == "zip" ]; then
-	quit_with "zip format not supported"
+	#quit_with "zip format not supported"
+	echo "Warning [fetch_tarball]: zip file supported via creating an intermediary tarball"
+	args=xvf
     else
 	quit_with "unknown compressed tarball extension: $ext"
     fi
@@ -103,6 +105,18 @@ function fetch_tarball()
 	#     wget --ca-certificate=/etc/pki/tls/cert.pem $url
 	wget $url
 	[ -f $tarball ] || quit_with "failed to download [ $tarball ]"
+    fi
+
+    if [ "$ext" == "zip" ]; then
+	echo "Warning [fetch_tarball]: after download, transform the zip file"
+	local zip_fnm=$(unzip -ql $tarball | \
+	    perl -ne 'if ( $_ =~ /\s+([^\/\s]+?)\/.*/) { print "$1\n"; exit }')
+	echo "[fetch_tarball]: unzipped file name: [$zip_fnm]"
+	[ ! -z "$zip_fnm" ] || quit_with "[fetch_tarball] zip: failed to extract file name"
+	unzip $tarball
+	tar -cvf $prefix.tar $zip_fnm
+	rm -fr $zip_fnm
+	tarball=$prefix.tar
     fi
 
     # Store the value of the return variable
