@@ -24,6 +24,8 @@ cd $ver
 make FC=gfortran libs netlib shared
 make FC=gfortran tests
 make PREFIX=$install_dir install
+echo "Creating a symlink for libblas.so"
+ln -s $install_dir/lib/libopenblas.so $install_dir/lib/libblas.so
 cd ..
 
 cd $install_dir

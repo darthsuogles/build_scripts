@@ -1,27 +1,19 @@
 #!/bin/bash
 
-ver=2.8.12.2
+pkg=cmake
+#ver=${1:-2.8.12.2}
+ver=${1:-3.2.2}
+ver_major=${ver%.*}
 
-tmp_dir=/scratch1/phi/cmake
-base_dir=$PWD
+source ../build_pkg.sh
 
-if [ ! -d $ver ]; then
-    fname=cmake-$ver
-    tarball=$fname.tar.gz
+url=http://www.cmake.org/files/v$ver_major/cmake-$ver.tar.gz
+prepare_pkg $pkg $url $ver install_dir
 
-    mkdir -p $tmp_dir; cd $tmp_dir
-    if [ ! -e $tarball ]; then
-	wget http://www.cmake.org/files/v2.8/cmake-2.8.12.2.tar.gz
-    fi
-    fname=`tar -zxvf $tarball | sed -e 's@/.*@@' | uniq`
-    mv $fname $ver
-    rm $tarball
-    ln -s $tmp_dir/$ver $base_dir/$ver    
-    cd $base_dir
-fi
 
 cd $ver
-./configure --prefix=$HOME/local
+#./configure --prefix=$HOME/local
+./configure --prefix=$install_dir
 make -j8
 make install
 cd ..
