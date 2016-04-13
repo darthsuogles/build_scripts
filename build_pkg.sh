@@ -1,20 +1,9 @@
 #!/bin/bash
 
-function quit_with()
-{
-    printf "`date` Error: $@\n"
-    exit
-}
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source ${script_dir}/common.sh
 
-# Find "scratch", a common name for the large local directory
-# in a HPC environment that we can mess with
-# If non is found, use /tmp
-function find_scratch_dir()
-{
-    scratch_dir=$(df -P /scratch* /tmp* /temp* 2>/dev/null | awk '{print $4"\t"$6}' | tail -n +2 | sort | tail -n1 | awk '{print $2}') 
-    [ -d $scratch_dir ] || scratch_dir='./tmp'
-    echo "$scratch_dir"
-}
+function find_scratch_dir() { mkdir -p $HOME/local/.drgscl/__build && echo "$_"; }
 
 function check_tarball()
 {
@@ -170,13 +159,11 @@ function prepare_pkg()
     local pkg_ver=$3
     local _res_var=$4
 
-    tmp_dir=`find_scratch_dir`
-    [ $? -eq 0 ] || quit_with "failed to find a scratch dir"
-    build_dir=$tmp_dir/phi/$pkg_name
-    install_dir=$PWD/$pkg_ver
+    build_dir=${drgscl_local}/__build/${pkg_name}
+    install_dir=${drgscl_local}/cellar/${pkg_name}/${pkg_ver}
 
     echo "Moving to build dir $build_dir"
-    mkdir -p $build_dir; cd $build_dir
+    mkdir -p ${build_dir} && cd ${build_dir}
     update_pkg $pkg_fpath $pkg_ver
     mkdir -p $install_dir
     [ -d $install_dir/src ] || ln -sf $build_dir/$ver $install_dir/src
