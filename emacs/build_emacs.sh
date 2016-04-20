@@ -8,6 +8,7 @@ ver=$(echo $tarball | perl -ne 'print $1 if /emacs-((\d+\.?)+?)\.tar/')
 [ ! -z $ver ] || ver=24.4
 
 source ../build_pkg.sh
+source ../gen_modules.sh
 
 prepare_pkg emacs $url $ver install_dir
 echo $install_dir
@@ -28,3 +29,7 @@ cd $ver
 make -j8
 make install
 cd ..
+
+print_header emacs ${ver}
+print_modline "prepend-path PATH ${install_dir}/bin"
+print_modline "prepend-path MANPATH ${install_dir}/share/man"
