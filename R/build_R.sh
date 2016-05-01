@@ -47,10 +47,10 @@ else
                 --enable-memory-profiling \
                 --enable-lto \
                 --with-tcltk=no \
-                --with-cairo=yes \
-                --with-libpng=yes \
-                --with-jpeglib=yes \
-                --with-libtiff=yes \
+                --with-cairo=no \
+                --with-libpng=no \
+                --with-jpeglib=no \
+                --with-libtiff=no \
                 --with-system-zlib=yes \
                 --with-system-bzlib=yes \
                 --with-system-pcre=yes \
@@ -65,5 +65,5 @@ else
 fi
 
 make -j8
-make check-all
+#make check-all
 make install

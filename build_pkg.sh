@@ -2,6 +2,7 @@
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source ${script_dir}/common.sh
+source "$(get_install_root)/Lmod/dev/lmod/lmod/init/bash"
 
 function find_scratch_dir() { mkdir -p $HOME/local/.drgscl/__build && echo "$_"; }
 
@@ -48,11 +49,10 @@ function fetch_tarball()
     local ver=$2
     local _res_var=$3
 
-    #tarball=$(curl -sIkL $url | perl -ne 'if ($_ =~ /\/([^\/]+?\.(gz|bz2|tgz|tbz2))/) { print $1 }')
     tarball=$(echo $url | perl -pe '/.*\.(gz|bz2|tgz|tbz2)/')
     [ ! -z "$tarball" ] || tarball=$(curl -sIkL $url | perl -ne 'print $1 if (/\/([^\/]+?\.(gz|bz2|tgz|tbz2))/)')
     tarball=$(basename $tarball)
-    echo "tarball name resolved as $tarball"
+    log_info "tarball name resolved as $tarball"
 
     ext=${tarball##*.}
     prefix=${tarball%.*}
@@ -72,7 +72,7 @@ function fetch_tarball()
 	prefix=${prefix%.*}
     elif [ "$ext" == "zip" ]; then
 	#quit_with "zip format not supported"
-	echo "Warning [fetch_tarball]: zip file supported via creating an intermediary tarball"
+	log_warn "[fetch_tarball]: zip file supported via creating an intermediary tarball"
 	args=xvf
     else
 	quit_with "unknown compressed tarball extension: $ext"
@@ -84,23 +84,19 @@ function fetch_tarball()
 
     #exit
     if [ ! -f $tarball ]; then
-	url_proto=${url%%://*} 
-	# if [ $url_proto == "https" ]; then
-	#     #wget --no-check-certificate $url 
-	#     #curl --sslv3 -k -O $url
-	#     # Recently github removed some ciphers
-	#     # REF: https://review.openstack.org/#/c/102173/
-	#     # REF: https://bugzilla.redhat.com/show_bug.cgi?id=1098711
-	#     wget --ca-certificate=/etc/pki/tls/cert.pem $url
-	wget $url
-	[ -f $tarball ] || quit_with "failed to download [ $tarball ]"
+	    url_protocol=${url%%://*} 
+        wget $url \
+            || wget --no-check-certificate $url \
+            || curl --sslv3 -kL -O $url \
+            || wget --ca-certificate=/etc/pki/tls/cert.pem $url
+	    [ -f $tarball ] || quit_with "failed to download [ $tarball ]"
     fi
 
     if [ "$ext" == "zip" ]; then
-	echo "Warning [fetch_tarball]: after download, transform the zip file"
+	log_warn "[fetch_tarball]: after download, transform the zip file"
 	local zip_fnm=$(unzip -ql $tarball | \
 	    perl -ne 'if ( $_ =~ /\s+([^\/\s]+?)\/.*/) { print "$1\n"; exit }')
-	echo "[fetch_tarball]: unzipped file name: [$zip_fnm]"
+	log_info "[fetch_tarball]: unzipped file name: [$zip_fnm]"
 	[ ! -z "$zip_fnm" ] || quit_with "[fetch_tarball] zip: failed to extract file name"
 	unzip $tarball
 	tar -cvf $prefix.tar $zip_fnm
@@ -121,19 +117,19 @@ function fetch_tarball()
 
 function update_pkg()
 {    
-    [ $# -eq 2 ] || "[update_pkg] usage: <fpath> <ver>"
+    [ $# -eq 2 ] || quit_with "[update_pkg] usage: <fpath> <ver>"
     local fpath=$1
     local ver=$2
     if [ -d $ver ]; then
-	echo "$ver already exists"
-	return
+	    log_info "$ver already exists"
+	    return
     fi
 
     if [ ! -z "$(echo $fpath | grep -Ei '^(http(s)*|ftp)\:\/\/')" ]; then
-	echo "Extracting a tarball from the url address $fpath"
+	log_info "Extracting a tarball from the url address $fpath"
 	fetch_tarball $fpath $ver tarball
     else # the file must already be a tarball
-	echo "Extracting a locally stored tarball, version will be ignored"
+	log_info "Extracting a locally stored tarball, version will be ignored"
 	tarball_fpath=$(readlink -f $fpath)
 	tarball=$(basename $tarball_fpath)
 	echo $tarball_fpath
@@ -143,7 +139,7 @@ function update_pkg()
 
     check_tarball $tarball tar_args
     
-    echo "Uncompressing ... might take a while ... please be patient"
+    log_info "Uncompressing ... might take a while ... please be patient"
     fname=`tar -$tar_args $tarball | sed -e 's@/.*@@' | uniq`    
     [ -d $fname ] || quit_with "[update_pkg]: cannot find the extracted directory"
     [ "$fname" == "$ver" ] || mv $fname $ver
@@ -159,13 +155,25 @@ function prepare_pkg()
     local pkg_ver=$3
     local _res_var=$4
 
-    build_dir=${drgscl_local}/__build/${pkg_name}
-    install_dir=${drgscl_local}/cellar/${pkg_name}/${pkg_ver}
+    # Adding a random number
+    local scratch_dir=$(find /scratch/ -mindepth 2 -maxdepth 2 -name '*.drgscl' -type d \
+                             -exec /bin/bash -c 'df {} | tail -n1' \; | \
+                               sort -k3 | awk '{print $NF}' | head -n1)
+    [ ".drgscl" == "$(basename ${scratch_dir})" ] || local scratch_dir="${scratch_dir}/.drgscl"
+    if [ -d "${scratch_dir}/" ]; then
+        local build_root="${scratch_dir}"
+    else
+        local build_root="$(get_build_root)"
+    fi
+    mkdir -p "${build_root}"    
+    local build_dir="$(mktemp -d --suffix=.build ${build_root}/${pkg_name}.XXXXXXX)"    
+    [ -d "${build_dir}/" ] || quit_with "cannot create build dir ${build_dir}"
 
-    echo "Moving to build dir $build_dir"
-    mkdir -p ${build_dir} && cd ${build_dir}
+    local install_dir=${drgscl_local}/cellar/${pkg_name}/${pkg_ver} && mkdir -p ${install_dir}
+
+    log_info "Moving to build dir $build_dir"
+    cd ${build_dir}
     update_pkg $pkg_fpath $pkg_ver
-    mkdir -p $install_dir
     [ -d $install_dir/src ] || ln -sf $build_dir/$ver $install_dir/src
 
     # Set the install dir to the return value

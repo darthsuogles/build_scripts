@@ -1,38 +1,22 @@
+#!/bin/bash
 
 ver=1.2.8
 
-tmp_dir=/scratch1/phi/zlib
-base_dir=$PWD
+SKIP_BUILD=yes
 
-script=`basedir $0`
+source ../build_pkg.sh 
+source ../gen_modules.sh 
 
-function quit_with()
-{
-    printf "Error [ $script ]:\n"
-    printf ">>>   $@"
-    exit
-}
+prepare_pkg zlib "http://zlib.net/zlib-${ver}.tar.gz" ${ver} install_dir
 
-function update_pkg()
-{
-    ver=$1
-    if [ ! -d $ver ]; then
-	fname=zlib-$ver
-	tarball=$fname.tar.gz
-	if [ ! -d $ver ]; then
-	    curl -O http://zlib.net/zlib-1.2.8.tar.gz
-	fi
-	fname=`tar -zxvf $tarball | sed -e 's@/.*@@' | uniq`
-	mv $fname $ver        
-    fi
-}
+if [ "yes" != "${SKIP_BUILD}" ]; then    
+    cd $ver
+    ./configure --prefix=${install_dir}
+    make -j8
+    make install
+fi
 
-
-mkdir -p $tmp_dir; cd $tmp_dir
-update_pkg $ver || quit_with "failed to update the package of version $ver"
-ln -s $tmp_dir/$ver $base_dir/$ver
-
-cd $ver
-./configure --prefix=$HOME/local
-make -j8
-make install
+print_header zlib ${ver}
+print_modline "prepend-path CPATH ${install_dir}/include"
+print_modline "prepend-path LIBRARY_PATH ${install_dir}/lib"
+print_modline "prepend-path MANPATH ${install_dir}/share/man"

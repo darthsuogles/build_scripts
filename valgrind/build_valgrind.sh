@@ -1,14 +1,29 @@
 #!/bin/bash
 
-#curl -sL http://valgrind.org/downloads/current.html | perl -ne 'print "$1\n" if /valgrind-((\d+\.?)+?)\.tar\.bz2/' | sort | tail -n1
+BUILD_VALGRIND=yes
 
-ver=3.10.0
 source ../build_pkg.sh
-prepare_pkg valgrind http://valgrind.org/downloads/valgrind-${ver}.tar.bz2 $ver install_dir
-echo $install_dir
+source ../gen_modules.sh    
 
-cd $ver
-./configure --prefix=$install_dir
-make -j8
-make check
-make install
+module load gcc
+
+function build_valgrind() {
+    local ver=$(curl -sL http://valgrind.org/downloads/current.html | \
+                       perl -ne 'print "$1\n" if /valgrind-((\d+\.?)+?)\.tar\.bz2/' | \
+                       head -n1)
+    [ -n "${ver}" ] || local ver=3.12.2
+    
+    local url="http://valgrind.org/downloads/valgrind-${ver}.tar.bz2"
+    prepare_pkg valgrind ${url} ${ver} install_dir
+
+    [ "yes" == "${BUILD_VALGRIND}" ] || return
+    cd $ver
+    ./configure --prefix=${install_dir} \
+                --enable-only64bit \
+                --enable-ubsan \
+                --enable-tls
+    make -j8
+    make check
+    make install
+}
+build_valgrind
