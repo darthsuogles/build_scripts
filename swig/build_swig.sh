@@ -1,17 +1,26 @@
 #!/bin/bash
 
+BUILD_SWIG=no
+
 source ../build_pkg.sh
+source ../gen_modules.sh 
 
-pkg_url=$(curl -sL http://www.swig.org/download.html | perl -ne 'print $1 if /(http:\/\/.*?\/swig-(\d+\.?)+?\.tar\.gz)/' | uniq)
-ver=$(basename $pkg_url | perl -ne 'print $1 if /swig-((\d+\.?)+?)\.tar\.gz/')
+function build_swig() {
+    local pkg_url=$(curl -sL http://www.swig.org/download.html | \
+                     perl -ne 'print $1 if /(http:\/\/.*?\/swig-(\d+\.?)+?\.tar\.gz)/' | 
+                     uniq)
+    local ver=$(basename $pkg_url | perl -ne 'print $1 if /swig-((\d+\.?)+?)\.tar\.gz/')    
+    prepare_pkg swig $pkg_url $ver install_dir 
+    swig_ver=${ver}
+    swig_dir=${install_dir}   
 
-echo $pkg_url $ver
+    [ "yes" == "${BUILD_SWIG}" ] || return 0
+    cd $ver
+    ./configure --prefix=$install_dir
+    make -j32
+    make install
+}
+build_swig
 
-prepare_pkg swig $pkg_url $ver install_dir
-echo $install_dir
-
-echo "Warning: this package will be installed under ~/local"
-cd $ver
-./configure --prefix=$HOME/local
-make -j8
-make install
+print_header swig "${swig_ver}"
+print_modline "prepend-path PATH ${swig_dir}/bin"

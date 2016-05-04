@@ -15,28 +15,44 @@ function check_tarball()
     ext=${tarball##*.}
     prefix=${tarball%.*}
     if [ "$ext" == "tar" ]; then
-	args=xvf
+	    args=xvf
     elif [ "$ext" == "tgz" ]; then 
-	args=zxvf
+	    args=zxvf
     elif [ "$ext" == "gz" ] && [ ${prefix##*.} == "tar" ]; then 
-	args=zxvf
-	prefix=${prefix%.*}
+	    args=zxvf
+	    prefix=${prefix%.*}
     elif [ "$ext" == "bz2" ] && [ ${prefix##*.} == "tar" ]; then
-	args=jxvf
-	prefix=${prefix%.*}
+	    args=jxvf
+	    prefix=${prefix%.*}
     elif [ "$ext" == "xz" ] && [ ${prefix##*.} == "tar" ]; then
-	[ ! -z `which unxz 2> /dev/null` ] || quit_with "xz extension is not supported"
-	unxz < ${tarball} > ${prefix}
-	tarball=$prefix
-	args=xvf
-	prefix=${prefix%.*}
+	    [ ! -z `which unxz 2> /dev/null` ] || quit_with "xz extension is not supported"
+	    unxz < ${tarball} > ${prefix}
+	    tarball=$prefix
+	    args=xvf
+	    prefix=${prefix%.*}
     elif [ "$ext" == "zip" ]; then
-	quit_with "zip format not supported"
+	    quit_with "zip format not supported"
     else
-	quit_with "unknown compressed tarball extension: $ext"
+	    quit_with "unknown compressed tarball extension: $ext"
     fi
 
     eval $_res_var="'$args'"
+}
+
+# Mimicking a human user
+function _wisper_fetch() {
+    local user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0"
+    local cmd=$1; shift
+    case "$cmd" in
+        wget) wget --header="Accept: text/html" \
+                   --user-agent="${user_agent}" \
+                   "$@"
+              ;;
+        curl) curl -A "${user_agent}" $@
+              ;;
+        \?) return 1
+            ;;
+    esac
 }
 
 # Download and decompress a package specified by an url containing the tarball
@@ -49,60 +65,77 @@ function fetch_tarball()
     local ver=$2
     local _res_var=$3
 
-    tarball=$(echo $url | perl -pe '/.*\.(gz|bz2|tgz|tbz2)/')
-    [ ! -z "$tarball" ] || tarball=$(curl -sIkL $url | perl -ne 'print $1 if (/\/([^\/]+?\.(gz|bz2|tgz|tbz2))/)')
+    tarball=$(echo $url | perl -pe '/.*\.(gz|bz2|tgz|tbz2|xz)/')
+    [ -n "$tarball" ] || \
+        tarball=$(_wisper_fetch curl -sIkL $url | perl -ne 'print $1 if (/\/([^\/]+?\.(gz|bz2|tgz|tbz2|xz))/)')
     tarball=$(basename $tarball)
     log_info "tarball name resolved as $tarball"
 
     ext=${tarball##*.}
     prefix=${tarball%.*}
-    if [ "$ext" == "tgz" ]; then 
-	args=zxvf
-    elif [ "$ext" == "gz" ] && [ ${prefix##*.} == "tar" ]; then 
-	args=zxvf
-	prefix=${prefix%.*}
-    elif [ "$ext" == "bz2" ] && [ ${prefix##*.} == "tar" ]; then
-	args=jxvf
-	prefix=${prefix%.*}
-    elif [ "$ext" == "xz" ] && [ ${prefix##*.} == "tar" ]; then
-	[ ! -z `which unxz 2> /dev/null` ] || quit_with "xz extension is not supported"
-	unxz < ${tarball} > ${prefix}
-	args=xvf
-	tarball=$prefix
-	prefix=${prefix%.*}
-    elif [ "$ext" == "zip" ]; then
-	#quit_with "zip format not supported"
-	log_warn "[fetch_tarball]: zip file supported via creating an intermediary tarball"
-	args=xvf
-    else
-	quit_with "unknown compressed tarball extension: $ext"
-    fi
+
+    case "${ext}" in 
+        tgz)
+	        args=zxvf
+            ;;
+        gz) [ "tar" != "${prefix##*.}" ] && quit_with "unrecognized tarball ${tarball}"
+            args=zxvf
+	        prefix=${prefix%.*}
+            ;;
+        bz2) [ "tar" != "${prefix##*.}" ] && quit_with "unrecognized tarball ${tarball}"
+             args=jxvf
+	         prefix=${prefix%.*}
+             ;;
+        xz) [ "tar" != "${prefix##*.}" ] && quit_with "unrecognized tarball ${tarball}"            
+	        which unxz &> /dev/null || quit_with "xz extension is not supported"
+            local postproc_flag="xz"
+	        args=xvf
+            ;;
+        zip)           
+	        log_warn "[fetch_tarball]: zip file supported via creating an intermediary tarball"
+            local postproc_flag="zip"
+	        args=xvf
+            ;;
+        \?)            
+	        quit_with "unknown compressed tarball extension: $ext"
+            ;;
+    esac
     
     echo "$prefix, $ext, $args"
     fname=$prefix
     echo $fname | perl -ne 'if ( $_ =~ /\d+.*/ ) { print $1 }'
 
-    #exit
     if [ ! -f $tarball ]; then
 	    url_protocol=${url%%://*} 
-        wget $url \
-            || wget --no-check-certificate $url \
-            || curl --sslv3 -kL -O $url \
-            || wget --ca-certificate=/etc/pki/tls/cert.pem $url
+        _wisper_fetch wget "${url}" \
+            || _wisper_fetch wget --no-check-certificate "${url}" \
+            || _wisper_fetch curl --sslv3 -kL -O "${url}" \
+            || _wisper_fetch wget --ca-certificate=/etc/pki/tls/cert.pem "${url}"
 	    [ -f $tarball ] || quit_with "failed to download [ $tarball ]"
     fi
 
-    if [ "$ext" == "zip" ]; then
-	log_warn "[fetch_tarball]: after download, transform the zip file"
-	local zip_fnm=$(unzip -ql $tarball | \
-	    perl -ne 'if ( $_ =~ /\s+([^\/\s]+?)\/.*/) { print "$1\n"; exit }')
-	log_info "[fetch_tarball]: unzipped file name: [$zip_fnm]"
-	[ ! -z "$zip_fnm" ] || quit_with "[fetch_tarball] zip: failed to extract file name"
-	unzip $tarball
-	tar -cvf $prefix.tar $zip_fnm
-	rm -fr $zip_fnm
-	tarball=$prefix.tar
-    fi
+    case "${postproc_flag}" in
+        zip)
+	        log_warn "[fetch_tarball]: after download, transform the zip file"
+	        local zip_fnm=$(unzip -ql $tarball | \
+	                               perl -ne 'if ( $_ =~ /\s+([^\/\s]+?)\/.*/) { print "$1\n"; exit }')
+	        log_info "[fetch_tarball]: unzipped file name: [$zip_fnm]"
+	        [ ! -z "$zip_fnm" ] || quit_with "[fetch_tarball] zip: failed to extract file name"
+	        unzip $tarball
+	        tar -cvf $prefix.tar $zip_fnm
+	        rm -fr $zip_fnm
+	        tarball=$prefix.tar
+            ;;
+        xz)
+            log_info "postprocessing xz tarball ${tarball}"
+            unxz < ${tarball} > ${prefix}
+	        tarball=$prefix
+	        prefix=${prefix%.*}
+            ;;
+        \?)
+            log_info "standard tarball, no more postprocessing"
+            ;;
+    esac
 
     # Store the value of the return variable
     eval $_res_var="'$tarball'"
@@ -126,15 +159,15 @@ function update_pkg()
     fi
 
     if [ ! -z "$(echo $fpath | grep -Ei '^(http(s)*|ftp)\:\/\/')" ]; then
-	log_info "Extracting a tarball from the url address $fpath"
-	fetch_tarball $fpath $ver tarball
+	    log_info "Extracting a tarball from the url address $fpath"
+	    fetch_tarball $fpath $ver tarball
     else # the file must already be a tarball
-	log_info "Extracting a locally stored tarball, version will be ignored"
-	tarball_fpath=$(readlink -f $fpath)
-	tarball=$(basename $tarball_fpath)
-	echo $tarball_fpath
-	echo $tarball
-	[ -f $tarball ] || mv $tarball_fpath ./$tarball
+	    log_info "Extracting a locally stored tarball, version will be ignored"
+	    tarball_fpath=$(readlink -f $fpath)
+	    tarball=$(basename $tarball_fpath)
+	    echo $tarball_fpath
+	    echo $tarball
+	    [ -f $tarball ] || mv $tarball_fpath ./$tarball
     fi
 
     check_tarball $tarball tar_args
@@ -168,14 +201,15 @@ function prepare_pkg()
     mkdir -p "${build_root}"    
     local build_dir="$(mktemp -d --suffix=.build ${build_root}/${pkg_name}.XXXXXXX)"    
     [ -d "${build_dir}/" ] || quit_with "cannot create build dir ${build_dir}"
-
-    local install_dir=${drgscl_local}/cellar/${pkg_name}/${pkg_ver} && mkdir -p ${install_dir}
+    # Warinig: this variable cannot be local
+    _install_dir=${drgscl_local}/cellar/${pkg_name}/${pkg_ver} && mkdir -p ${_install_dir}
 
     log_info "Moving to build dir $build_dir"
     cd ${build_dir}
     update_pkg $pkg_fpath $pkg_ver
-    [ -d $install_dir/src ] || ln -sf $build_dir/$ver $install_dir/src
+    [ -d "${_install_dir}/src/" ] || ln -sf "${build_dir}/${ver}" "${_install_dir}/src"
 
     # Set the install dir to the return value
-    eval $_res_var="'$install_dir'"
+    eval $_res_var="'${_install_dir}'"
+    eval ${pkg_name}_install_dir="'${_install_dir}'"
 }

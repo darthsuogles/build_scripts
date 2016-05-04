@@ -2,11 +2,13 @@
 
 ver=1.8.19
 
-BUILD_SZLIB=no
-BUILD_HDF5=no
+BUILD_SZLIB=yes
+BUILD_HDF5=yes
 
 source ../build_pkg.sh
 source ../gen_modules.sh 
+
+set -ex
 
 # Prerequisites
 module load openmpi
@@ -18,7 +20,7 @@ function build_szlib() {
     szlib_ver=${ver}
     szlib_dir=${install_dir}
 
-    [ "yes" == "${BUILD_SZLIB}" ] || return
+    [ "yes" == "${BUILD_SZLIB}" ] || return 0
     cd $ver
     ./configure --prefix="${install_dir}"
     make -j32
@@ -31,20 +33,19 @@ function build_hdf5() {
     local latest_ver=$(curl -s www.hdfgroup.org/HDF5/release/obtainsrc.html | \
 	                          perl -ne 'print "$1\n" if /hdf5-(\d+(\.\d+)*)\.tar\.bz2/' | \
                               head -n1)
-    [ -z "${latest_ver}" ] || ver="${latest_ver}"
+    [ -z "${latest_ver}" ] || local ver="${latest_ver}"
 
     local url="http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-${ver}/src/hdf5-${ver}.tar.bz2"
-    prepare_pkg hdf5 ${url} ${ver} install_dir
+    prepare_pkg hdf5 ${url} ${ver} install_dir    
     hdf5_ver=${ver}
     hdf5_dir=${install_dir}
 
-    [ "yes" == "${BUILD_HDF5}" ] || return
+    [ "yes" == "${BUILD_HDF5}" ] || return 0
     cd $ver
     ./configure --prefix=${install_dir} \
                 --enable-production --enable-debug=no \
                 --disable-dependency-tracking \
                 --enable-fortran \
-                --enable-cxx \
                 --with-szlib=$szlib_dir \
                 --enable-filters=all \
                 --enable-static=yes \
