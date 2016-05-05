@@ -1,18 +1,15 @@
 #!/bin/bash
 
-pkg=metis
-ver=${1:-5.1.0}
-
-#url=http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-$ver.tar.gz
-ver=4.0.1
-url=http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-${ver}.tar.gz
-
 source ../build_pkg.sh
+source ../gen_modules.sh 
 
-prepare_pkg $pkg $url $ver install_dir
+BUILD_METIS=yes
+function configure_fn() { make config prefix=$1 shared=1; }
+function build_fn() { LDFLAGS='-Wl,-rpath=${install_dir}/lib' make -j32; }
 
-cd $ver
-#make config shared=1 cc=gcc prefix=$install_dir
-make config cc=gcc prefix=$install_dir
-make -j8
-make install
+guess_build_pkg \
+    metis http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz \
+    -c "configure_fn" -b "build_fn"
+
+guess_print_modfile metis ${metis_ver}
+    

@@ -3,6 +3,8 @@
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source ${script_dir}/common.sh
 
+set -ex
+
 function print_header()
 {
     [[ $# -eq 2 ]] || quit_with "usage: print_header <pkg> <ver>"
@@ -35,4 +37,26 @@ function print_modline()
     else
 	echo $@ | tee -a $module_file
     fi
+}
+
+function guess_print_modfile() {
+    [[ $# -eq 2 ]] || quit_with "usage: guess_print_modfile <pkg> <ver>"
+    local pkg=$1
+    local ver=$2
+    local pkg_dir="$(get_pkg_install_dir ${pkg} ${ver})"
+    if [ -z "${pkg_dir}" ] || [ ! -d "${pkg_dir}/" ]; then
+        quit_with "cannot locate install location for ${pkg}/${ver}"
+    fi
+
+    local PKG="$(echo ${pkg} | tr '[:lower:]' '[:upper:]')"
+    print_header ${pkg} ${ver}
+    print_modline "setenv ${PKG}_ROOT ${pkg_dir}"
+    [ -d "${pkg_dir}/bin/" ]          && \
+        print_modline "prepend-path PATH            ${pkg_dir}/bin"
+    [ -d "${pkg_dir}/share/man" ]     && \
+        print_modline "prepend-path MANPATH         ${pkg_dir}/share/man"
+    [ -d "${pkg_dir}/share/info" ]    && \
+        print_modline "prepend-path INFO_PATH       ${pkg_dir}/share/info"
+    [ -d "${pkg_dir}/lib/pkgconfig" ] && \
+        print_modline "prepend-path PKG_CONFIG_PATH ${pkg_dir}/lib/pkgconfig"
 }
