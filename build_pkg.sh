@@ -182,7 +182,7 @@ function update_pkg()
 
 function prepare_pkg()
 {
-    [ $# -eq 4 ] || quit_with "Usage: build_pkg <pkg> <fpath> <ver> <install_dir_var>"
+    [[ $# -eq 4 ]] || quit_with "Usage: build_pkg <pkg> <fpath> <ver> <install_dir_var>"
     local pkg_name=$1
     local pkg_fpath=$2
     local pkg_ver=$3

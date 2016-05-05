@@ -1,35 +1,41 @@
 #!/bin/bash
 
-url_prefix=http://ftp.gnu.org/gnu/emacs
-tarball=$(curl -sL $url_prefix/ | perl -ne 'print "$1\n" if /(emacs-(\d+\.?)+?\.tar\.(gz|bz2))/' | sort -n | tail -n1)
-
-url=$url_prefix/$tarball
-ver=$(echo $tarball | perl -ne 'print $1 if /emacs-((\d+\.?)+?)\.tar/')
-[ ! -z $ver ] || ver=24.4
-
 source ../build_pkg.sh
 source ../gen_modules.sh
 
-prepare_pkg emacs $url $ver install_dir
-echo $install_dir
+set -ex
 
-export CC=gcc
-export CXX=g++
-export CFLAGS='-g -O3 -gdwarf-2'
+function build_emacs() {
+    local url_prefix=http://ftp.gnu.org/gnu/emacs
+    local tarball=$(curl -sL $url_prefix/ | \
+	perl -ne 'print "$1\n" if /(emacs-(\d+(\.\d+)*)\.tar\.(gz|bz2))/' | \
+	sort -V | tail -n1)
+    local url="$url_prefix/${tarball}"
+    local ver="$(echo "${tarball}" | perl -pe 's/emacs-(\d+(\.\d+)*)\.tar\.(gz|bz2)/$1/')"
+    [ -n $ver ] || local ver=29.99    
+    prepare_pkg emacs $url $ver install_dir
+    emacs_ver=${ver}
+    emacs_dir=${install_dir}
+    echo ${install_dir}; exit
 
-cd $ver
-./configure --prefix=$install_dir \
-    --without-jpeg \
-    --without-png \
-    --without-tiff \
-    --without-gif \
-    --without-xpm \
-    --with-x-toolkit=no \
-    --without-x
-make -j8
-make install
-cd ..
+    cd $ver
+    ./configure --prefix=$install_dir \
+	--without-jpeg \
+	--without-png \
+	--without-tiff \
+	--without-gif \
+	--without-xpm \
+	--with-x-toolkit=no \
+	--without-x
+    make -j32
+    make install
 
-print_header emacs ${ver}
-print_modline "prepend-path PATH ${install_dir}/bin"
-print_modline "prepend-path MANPATH ${install_dir}/share/man"
+# export CC=gcc
+# export CXX=g++
+# export CFLAGS='-g -O3 -gdwarf-2'
+}
+build_emacs
+
+print_header emacs ${emacs_ver}
+print_modline "prepend-path PATH ${emacs_dir}/bin"
+print_modline "prepend-path MANPATH ${emacs_dir}/share/man"
