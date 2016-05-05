@@ -1,18 +1,24 @@
 #!/bin/bash
 
 source ../build_pkg.sh
+source ../gen_modules.sh 
 
-ver=2.4.2
+BUILD_LIBTOOL=yes
 
-build_dir=/scratch0/phi/libtool
-install_dir=$HOME/local
+function build_libtool() {
+    local ver=$(curl -sL http://mirror.team-cymru.org/gnu/libtool | \
+                 perl -ne 'print "$1\n" if /libtool-(\d+(\.\d+)*).tar.gz/' | \
+                 sort -V | tail -n1)
+    libtool_ver=${ver}
+    [ "yes" == "${BUILD_LIBTOOL}" ] || return 0
+    local url=http://mirror.team-cymru.org/gnu/libtool/libtool-$ver.tar.gz
+    prepare_pkg libtool ${url} ${ver} install_dir
 
-mkdir -p $build_dir; cd $build_dir
-update_pkg http://mirror.team-cymru.org/gnu/libtool/libtool-$ver.tar.gz $ver
-mkdir -p $install_dir; ln -s $build_dir/$ver $install_dir/src
+    cd $ver
+    ./configure --prefix=$install_dir
+    make -j8
+    make install
+}
+build_libtool
 
-cd $ver
-./configure --prefix=$install_dir
-make -j8
-make install
-
+guess_print_modfile libtool ${libtool_ver}

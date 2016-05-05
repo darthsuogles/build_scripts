@@ -188,6 +188,7 @@ function get_pkg_install_dir() {
     local ver=$2
 
     _install_dir=${drgscl_local}/cellar/${pkg}/${ver}
+    eval ${pkg}_ver="'${ver}'"
     eval ${pkg}_dir="'${_install_dir}'"
     echo ${_install_dir}
 }
@@ -224,4 +225,76 @@ function prepare_pkg()
     # Set the install dir to the return value
     eval $_res_var="'${_install_dir}'"
     eval ${pkg_name}_install_dir="'${_install_dir}'"
+}
+
+
+function guess_build_pkg() {
+    [[ $# -lt 2 ]] && quit_with "usage: guess_build_pkg <pkg> <url> [configure_fn] [make_fn] [make_install_fn]"
+    local pkg=$1
+    local url=$2
+    shift 2
+    while getopts ":c:b:i:" opt "$@"; do
+        case "${opt}" in 
+            c) local configure_fn="${OPTARG}"
+               ;;
+            b) local build_fn="${OPTARG}"
+               ;;
+            i) local install_fn="${OPTARG}"       
+               ;;
+            \?) quit_with "usage: guess_build_pkg <pkg> <url> [configure_fn] [make_fn] [make_install_fn]"
+                ;;
+        esac
+    done
+
+    cat <<EOF 
+     pkg          : ${pkg}
+     url          : ${url}
+     configure_fn : ${configure_fn}
+     build_fn     : ${build_fn}
+     install_fn   : ${install_fn}
+EOF
+
+    local tarball_regex='print "$1\n" if /(([^\/_-\s]+?)(\s+|_|-)?(\d+(\.\d+)*)\.(tar(\.gz|\.bz2)*|tgz|tbz2))/'
+    local tarball=$(echo $(basename ${url}) | perl -ne "${tarball_regex}")
+    [ -z "${tarball}" ] || local url=${url%/*}    
+
+    log_info "attempt to get the latest version from the provided url"
+    local latest_tarball=$(curl -sL ${url} | perl -ne "${tarball_regex}" | sort -V | tail -n1)
+    local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+    if [ -n "${latest_ver}" ]; then
+        log_info "found version ${latest_ver} from user provided url"
+        local ver=${latest_ver}
+        local tarball=${latest_tarball}
+    else
+        local ver=$(echo ${tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+    fi
+    [ -n "${ver}" ] || quit_with "cannot get the correct version"
+    eval "${pkg}_ver=${ver}"
+    
+    local PKG=$(echo ${pkg} | tr '[:lower:]' '[:upper:]')
+    [ "yes" == "$(eval "echo \$BUILD_${PKG}")" ] || return 0    
+    prepare_pkg ${pkg} ${url}/${tarball} ${ver} install_dir
+
+    cd $ver
+    if [ -n "${configure_fn}" ]; then        
+        eval ${configure_fn} "${install_dir}"
+    else
+        ./configure --prefix=${install_dir}
+    fi
+    if [ -n "${build_fn}" ]; then
+        eval ${build_fn}
+    else
+        make -j32
+    fi
+    if [ -n "${install_fn}" ]; then
+        eval ${install_fn}
+    else
+        make install
+    fi
+    cat <<EOF 
+      =======================================
+      The package ${pkg} ${ver} is built in
+         ${PWD}
+      =======================================
+EOF
 }
