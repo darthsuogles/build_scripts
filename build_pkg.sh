@@ -41,14 +41,14 @@ function check_tarball()
 
 # Mimicking a human user
 function _wisper_fetch() {
-    local user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 Firefox/21.0"
+    local user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/601.5.17 (KHTML, like Gecko) Version/9.1 Safari/601.5.17"
+    local header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
     local cmd=$1; shift
+    
     case "$cmd" in
-        wget) wget --header="Accept: text/html" \
-                   --user-agent="${user_agent}" \
-                   "$@"
+        wget) wget --header="${header}" --user-agent="${user_agent}" "$@"
               ;;
-        curl) curl -A "${user_agent}" $@
+        curl) curl -A "${user_agent}" "$@"
               ;;
         \?) return 1
             ;;
@@ -111,7 +111,9 @@ function fetch_tarball()
             || _wisper_fetch wget --no-check-certificate "${url}" \
             || _wisper_fetch curl --sslv3 -kL -O "${url}" \
             || _wisper_fetch wget --ca-certificate=/etc/pki/tls/cert.pem "${url}"
-	    [ -f $tarball ] || quit_with "failed to download [ $tarball ]"
+	    [ -f ${tarball} ] || log_warn "failed to download [ $tarball ] 1st attemp"
+        [ file "${tarball}" | grep -Ei 'compressed data' ] || (rm -f "${tarball}" && wget "${url}")
+        [ -f ${tarball} ] || quit_with "failed to download [ $tarball ] 2nd attemp"
     fi
 
     case "${postproc_flag}" in
@@ -178,6 +180,16 @@ function update_pkg()
     [ "$fname" == "$ver" ] || mv $fname $ver
     [ -d $ver ] || quit_with "[update_pkg]: failed to create directory $PWD/$ver"
     rm $tarball
+}
+
+function get_pkg_install_dir() {
+    [[ $# -eq 2 ]] || quit_with "Usage: get_pkg_install_dir <pkg> <ver>"
+    local pkg=$1
+    local ver=$2
+
+    _install_dir=${drgscl_local}/cellar/${pkg}/${ver}
+    eval ${pkg}_dir="'${_install_dir}'"
+    echo ${_install_dir}
 }
 
 function prepare_pkg()

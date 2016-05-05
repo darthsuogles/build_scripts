@@ -1,33 +1,37 @@
 #!/bin/bash
 
 source ../build_pkg.sh
+source ../gen_modules.sh 
 
-ver=${1:-1.56.0}
-base_dir=$(readlink -f ${BASH_SOURCE[0]} | xargs dirname)
+BUILD_BOOST=no
 
-# boost
-BOOST_MAJOR=${ver%%.*}
-BOOST_MINOR=${ver#*.}; BOOST_MINOR=${BOOST_MINOR%.*}
-BOOST_VERSION=$ver
+set -ex
 
-#build_dir=/scratch0/phi/boost
-build_dir=`find_scratch_dir`
-install_dir=$PWD/$BOOST_VERSION
+function build_boost() {
+    local url_prefix="http://www.boost.org/users/history/"
+    local ver=$(curl -sL ${url_prefix} | \
+                       perl -ne 'print "$1\n" if /version_(\d+(_\d+)*)\.html/' | \
+                       tr '_' '.' | sort -V | tail -n1)
+    [ -z "${ver}" ] && quit_with "failed to find version"
+    boost_ver=${ver}
+    get_pkg_install_dir boost ${ver}
+    [ "yes" == "${BUILD_BOOST}" ] || return 0
 
-BOOST_LIBDIR=$install_dir/lib
-export LD_LIBRARY_PATH=$JAVA_HOME/jre/lib/amd64/server:$LD_LIBRARY_PATH
+    local file_ver="$(echo ${ver} | tr '.' '_')"
+    local url=$(curl -sL "${url_prefix}/version_${file_ver}.html" | \
+                       perl -ne "print \"\$1\n\" if /(https?:\/(\/[^\/]+)+?\/${ver}\/boost_${file_ver}\.tar\.(gz|bz2))/" | \
+                       head -n1)
+    prepare_pkg boost ${url} ${ver} install_dir
 
-boost_file=boost_$(echo $BOOST_VERSION | tr '.' '_')
-boost_tarball=$boost_file.tar.bz2
-mkdir -p $build_dir; cd $build_dir
-update_pkg http://downloads.sourceforge.net/project/boost/boost/$BOOST_VERSION/$boost_tarball $BOOST_VERSION
-mkdir -p $install_dir; ln -s $build_dir/$BOOST_VERSION $install_dir/src
+    cd ${ver}
+    echo -e "Bootstrapping ... patience"
+    ./bootstrap.sh --prefix=${install_dir}
+    echo -e "Building ... patience"
+    ./b2 install
+}
+build_boost
 
-cd $build_dir/$BOOST_VERSION
-echo -e "Bootstrapping ... patience"
-./bootstrap.sh --prefix=$install_dir
-echo -e "Building ... patience"
-./b2 install
-
-mkdir -p ~/.modulefiles/boost
-${base_dir}/gen_modules_boost.sh | tee ~/.modulefiles/boost/$ver
+print_header boost ${boost_ver}
+print_modline "setenv BOOST_VER ${boost_ver}"
+print_modline "setenv BOOST_ROOT ${boost_dir}"
+print_modline "setenv BOOST_LIBDIR ${boost_dir}/lib"
