@@ -5,15 +5,14 @@ BUILD_VALGRIND=yes
 source ../build_pkg.sh
 source ../gen_modules.sh    
 
-module load gcc
-
 function build_valgrind() {
     local ver=$(curl -sL http://valgrind.org/downloads/current.html | \
                        perl -ne 'print "$1\n" if /valgrind-((\d+\.?)+?)\.tar\.bz2/' | \
                        head -n1)
     [ -n "${ver}" ] || local ver=3.12.2
     
-    local url="http://valgrind.org/downloads/valgrind-${ver}.tar.bz2"
+    valgrind_ver=${ver}
+    local url="http://valgrind.org/downloads/valgrind-${ver}.tar.bz2"    
     prepare_pkg valgrind ${url} ${ver} install_dir
 
     [ "yes" == "${BUILD_VALGRIND}" ] || return
@@ -27,3 +26,5 @@ function build_valgrind() {
     make install
 }
 build_valgrind
+
+guess_print_modfile valgrind ${valgrind_ver}

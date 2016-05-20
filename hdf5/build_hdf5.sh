@@ -2,8 +2,8 @@
 
 ver=1.8.19
 
-BUILD_SZLIB=yes
-BUILD_HDF5=yes
+BUILD_SZLIB=no
+BUILD_HDF5=no
 
 source ../build_pkg.sh
 source ../gen_modules.sh 

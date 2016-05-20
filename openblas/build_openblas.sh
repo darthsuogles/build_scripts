@@ -1,31 +1,22 @@
 #!/bin/bash
 
-ver=0.2.9
-
 source ../build_pkg.sh
+source ../gen_modules.sh 
 
-# Set the latest version 
-function set_latest_version()
-{
-    local url=http://www.openblas.net/Changelog.txt
-    ver_list=($(curl -s $url | grep -Ei "^Version" | awk '{print $2}'))
-    if [ "${ver_list[0]}" > "$ver" ]; then
-	echo "A new version ${ver_list[0]} is available"
-	ver=${ver_list[0]}
-    fi
+BUILD_OPENBLAS=no
+
+set -ex
+function configure_fn() { log_info "no need to configure"; }
+function build_fn() {    
+    make FC=gfortran libs netlib shared
+    make FC=gfortran tests
+}
+function install_fn() {
+    make PREFIX=$install_dir install
+    echo "Creating a symlink for libblas.so"
+    ln -s $install_dir/lib/libopenblas.so $install_dir/lib/libblas.so
 }
 
-set_latest_version
-tarball=$ver.tar.gz 
-curl -L -o $tarball http://github.com/xianyi/OpenBLAS/tarball/v$ver
-prepare_pkg openblas $PWD/$tarball $ver install_dir
-
-cd $ver
-make FC=gfortran libs netlib shared
-make FC=gfortran tests
-make PREFIX=$install_dir install
-echo "Creating a symlink for libblas.so"
-ln -s $install_dir/lib/libopenblas.so $install_dir/lib/libblas.so
-cd ..
-
-cd $install_dir
+guess_build_pkg openblas http://github.com/xianyi/OpenBLAS/archive/v0.2.18.tar.gz \
+                -c "configure_fn" -b "build_fn" -i "install_fn"
+guess_print_modfile openblas ${openblas_ver}

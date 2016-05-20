@@ -1,33 +1,17 @@
 #+TITLE: README
 
-<2014-11-26 Wed>
-The latest version features 
-1. Common functionalities are all aggregated into the main directory file =build_pkg.sh=. 
-   All subsequnt build scripts should simply *source* this file and call
-   the function
-   #+BEGIN_SRC sh
-     # In <some_pkg> directory 
-     ver=<some_pkg_version>
-     source ../build_pkg.sh
-     prepare_pkg <some_pkg> <some_pkg_tarball_url> $ver install_dir
-     
-     cd $ver
-     # Do the build stuffs for <some_package>
-     # Installation directory is stored in $install_dir     
-   #+END_SRC
+First make sure that we have a working toolchain (gcc/g++/gfortran).
+In ~Ubuntu~ this can be done via ~gcc/update_toolchain_ubuntu.sh~.
 
-Build scripts for various software packages
+For packages following =GNU= build standard, simply providing the 
+URL to the tarball should suffice. 
 
-Each script is treated as a piece of "data", rather than a program. 
-They should be portable enough so that one can place them wherever they
-want, for example, in a project directory for building dependencies. 
+#+BEGIN_SRC sh
+  # In <some_pkg> directory 
+  source ../build_pkg.sh
+  source ../gen_modules.sh
 
-This directory is usually located at "~/local/src" and the software packages
-are built inside each sub-directory under it. We find this to be most convenient.
+  guess_build_pkg <some_pkg_name> <some_pkg_tarball_url>
+  guess_print_modfile <some_pkg_name> ${<some_pkg_name>_ver}
+#+END_SRC
 
-<2014-10-03 Fri>
-We have introduced some general utility files in the main directory.
-The use of these functions has effectively shortened the length of build scripts.
-
-# !+TODO: Add support for progressive modification of the build scripts
-#         with respect to different versions of the package

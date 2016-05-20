@@ -1,13 +1,21 @@
 #!/bin/bash
 
-ver=3.3.1
+source ../build_pkg.sh
+source ../gen_modules.sh
+
+BUILD_MAVEN=yes
+ver=3.3.9
 pkg=maven
 
 ver_major=${ver%%.*}
 ver_minor=${ver#*.}
 
-source ../build_pkg.sh
-url=http://download.nextag.com/apache/${pkg}/${pkg}-${ver_major}/${ver}/binaries/apache-${pkg}-${ver}-bin.tar.gz
-prepare_pkg $pkg $url $ver install_dir
+function configure_fn() { log_info "binary only"; }
+function build_fn() { log_info "binary only"; }
+function install_fn() {
+    cp -r * ${install_dir}/.
+}
 
-cp -r $ver/* $install_dir/.
+url="http://download.nextag.com/apache/${pkg}/${pkg}-${ver_major}/${ver}/binaries/apache-${pkg}-${ver}-bin.tar.gz"
+guess_build_pkg maven "${url}" -c "configure_fn" -b "build_fn" -i "install_fn"
+guess_print_modfile maven ${maven_ver}

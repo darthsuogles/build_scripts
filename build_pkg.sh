@@ -4,7 +4,27 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source ${script_dir}/common.sh
 source "$(get_install_root)/Lmod/dev/lmod/lmod/init/bash"
 
-function find_scratch_dir() { mkdir -p $HOME/local/.drgscl/__build && echo "$_"; }
+#function find_scratch_dir() { mkdir -p $HOME/local/.drgscl/__build && echo "$_"; }
+
+function search_scratch_dirs() {   
+    [[ $# != 1 ]] && quit_with "search_scratch_dirs <artifact_name>"
+    local artifact="$1"
+    #local res=$(find /scratch/ -mindepth 2 -maxdepth 4 -name "${artifact}" -type f)
+    for dnm in /scratch/*/.drgscl/*/; do         
+        if [ -f "${dnm}/${artifact}" ]; then 
+            echo "${dnm}/${artifact}" && return 0
+        fi
+    done
+}
+
+function find_scratch_dir() {
+    local scratch_dir=$(find /scratch/ -mindepth 2 -maxdepth 2 \
+                             -name '*.drgscl' -type d \
+                             -exec /bin/bash -c 'df {} | tail -n1' \; | \
+                               sort -k3 | awk '{print $NF}' | head -n1)
+    [ -d "${scratch_dir}" ] || local scratch_dir="${HOME}/local/.drgscl/__build"
+    echo ${scratch_dir}
+}
 
 function check_tarball()
 {
@@ -60,14 +80,14 @@ function _wisper_fetch() {
 #function update_pkg()
 function fetch_tarball()
 {
-    [ $# -eq 3 ] || quit_with "[fectch_tarball] usage: <url> <ver> <tarball_var>"
+    [[ $# -eq 3 ]] || quit_with "[fectch_tarball] usage: <url> <ver> <tarball_var>"
     local url=$1
     local ver=$2
     local _res_var=$3
 
-    tarball=$(echo $url | perl -pe '/.*\.(gz|bz2|tgz|tbz2|xz)/')
+    tarball=$(echo $url | perl -pe '/.*\.(gz|bz2|tgz|tbz2|xz|zip)/')
     [ -n "$tarball" ] || \
-        tarball=$(_wisper_fetch curl -sIkL $url | perl -ne 'print $1 if (/\/([^\/]+?\.(gz|bz2|tgz|tbz2|xz))/)')
+        tarball=$(_wisper_fetch curl -sIkL $url | perl -ne 'print $1 if (/\/([^\/]+?\.(gz|bz2|tgz|tbz2|xz|zip))/)')
     tarball=$(basename $tarball)
     log_info "tarball name resolved as $tarball"
 
@@ -105,6 +125,11 @@ function fetch_tarball()
     fname=$prefix
     echo $fname | perl -ne 'if ( $_ =~ /\d+.*/ ) { print $1 }'
 
+    if [ "yes" != FORCE_DOWNLOAD_TARBALL ]; then
+        log_info "searching directories to see if the tarball has been downloaded"
+        local existing_tarball=$(search_scratch_dirs ${tarball})
+        [ -n "${existing_tarball}" ] && mv ${existing_tarball} .
+    fi
     if [ ! -f $tarball ]; then
 	    url_protocol=${url%%://*} 
         _wisper_fetch wget "${url}" \
@@ -112,7 +137,7 @@ function fetch_tarball()
             || _wisper_fetch curl --sslv3 -kL -O "${url}" \
             || _wisper_fetch wget --ca-certificate=/etc/pki/tls/cert.pem "${url}"
 	    [ -f ${tarball} ] || log_warn "failed to download [ $tarball ] 1st attemp"
-        [ file "${tarball}" | grep -Ei 'compressed data' ] || (rm -f "${tarball}" && wget "${url}")
+        [ -n "$(file "${tarball}" | grep -Ei 'compressed data')" ] || (rm -f "${tarball}" && wget "${url}")
         [ -f ${tarball} ] || quit_with "failed to download [ $tarball ] 2nd attemp"
     fi
 
@@ -152,7 +177,7 @@ function fetch_tarball()
 
 function update_pkg()
 {    
-    [ $# -eq 2 ] || quit_with "[update_pkg] usage: <fpath> <ver>"
+    [[ $# -eq 2 ]] || quit_with "[update_pkg] usage: <fpath> <ver>"
     local fpath=$1
     local ver=$2
     if [ -d $ver ]; then
@@ -254,13 +279,15 @@ function guess_build_pkg() {
      install_fn   : ${install_fn}
 EOF
 
-    local tarball_regex='print "$1\n" if /(([^\/_-\s]+?)(\s+|_|-)?(\d+(\.\d+)*)\.(tar(\.gz|\.bz2)*|tgz|tbz2))/'
+    local tarball_regex='print "$1\n" if /((\w+?[_-]?)+?(\d+(\.\d+)*)([_-]+?\w+)?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/'
     local tarball=$(echo $(basename ${url}) | perl -ne "${tarball_regex}")
-    [ -z "${tarball}" ] || local url=${url%/*}    
+    [ -z "${tarball}" ] || local url=${url%/*}
 
-    log_info "attempt to get the latest version from the provided url"
-    local latest_tarball=$(curl -sL ${url} | perl -ne "${tarball_regex}" | sort -V | tail -n1)
-    local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+    if [ "no" != "${USE_LATEST_VERSION}" ]; then
+        log_info "attempt to get the latest version from the provided url"
+        local latest_tarball=$(curl -sL ${url} | perl -ne "${tarball_regex}" | sort -V | tail -n1)
+        local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+    fi
     if [ -n "${latest_ver}" ]; then
         log_info "found version ${latest_ver} from user provided url"
         local ver=${latest_ver}

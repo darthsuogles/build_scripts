@@ -9,9 +9,17 @@ function get_latest() {
     ver=$latest_ver
 }
 
-# Specify build dir and install dir
-OPT_FLAGS="-O3 -funroll-loops -march=native"
-if [ "opt-iomp-mkl" == "${ver}" ]; then
+function sudo_build_deps() {
+    sudo apt-get install libz-dev libbz2-dev libtre-dev liblzma-dev tcl-dev tk-dev \
+         libcairo-dev libjpeg-dev libpng-dev libtiff-dev libpcre3-dev \
+         libfftw3-dev libopenblas-dev
+
+}
+
+function configure_R_mkl() {
+    OPT_FLAGS="-O3 -funroll-loops -march=native"
+
+    # Specify build dir and install dir
     MKL_LIB_PATH=/opt/stow/intel/composer_xe_2013_sp1/mkl/lib/intel64
     export LD_LIBRARY_PATH=$MKL_LIB_PATH:$LD_LIBRARY_PATH
     MKL=" -L${MKL_LIB_PATH}                         \
@@ -21,15 +29,12 @@ if [ "opt-iomp-mkl" == "${ver}" ]; then
           -lmkl_core          \
       -Wl,--end-group                           \
       -lgomp -lpthread"
-fi
 
-source ../build_pkg.sh
-prepare_pkg R http://watson.nci.nih.gov/cran_mirror/src/base/R-latest.tar.gz $ver install_dir
-cd $ver
+    source ../build_pkg.sh
+    prepare_pkg R http://watson.nci.nih.gov/cran_mirror/src/base/R-latest.tar.gz $ver install_dir
+    cd $ver
 
-if [ "opt-iomp-mkl" == "${ver}" ]; then
     ./configure --prefix=$install_dir \
-                --build=x86_64-redhat-linux-gnu \
                 --enable-R-shlib \
                 --with-blas="$MKL" --with-lapack \
                 CC="gcc -m64 -mtune=native" \
@@ -37,10 +42,10 @@ if [ "opt-iomp-mkl" == "${ver}" ]; then
                 F77="gfortran -m64 -mtune=native" \
                 FC="gfortran -m64 -mtune=native" \
                 --with-x=yes
-else
-    sudo apt-get install libz-dev libbz2-dev libtre-dev liblzma-dev tcl-dev tk-dev \
-         libcairo-dev libjpeg-dev libpng-dev libtiff-dev libpcre3-dev \
-         libfftw3-dev libopenblas-dev
+}
+
+function configure_R_openblas() {
+    OPT_FLAGS="-O3 -funroll-loops -march=native"
 
     ./configure --prefix=$install_dir \
                 --enable-R-profiling \
@@ -62,7 +67,7 @@ else
                 F77="gfortran -m64 -mtune=native" \
                 FC="gfortran -m64 -mtune=native" \
                 --with-x=no
-fi
+}
 
 make -j8
 #make check-all

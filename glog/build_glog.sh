@@ -1,14 +1,8 @@
 #!/bin/bash
 
-ver=${1:-0.3.3}
+source ../build_pkg.sh 
+source ../gen_modules.sh 
 
-tarball=glog-$ver.tar.gz
-[ -f $tarball ] || curl -O -k https://google-glog.googlecode.com/files/$tarball
-
-source ../build_pkg.sh
-prepare_pkg glog $PWD/$tarball $ver install_dir
-
-cd $ver
-./configure --prefix=$install_dir
-make -j16
-make install
+BUILD_GLOG=yes
+guess_build_pkg glog https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
+guess_print_modfile glog ${glog_ver}

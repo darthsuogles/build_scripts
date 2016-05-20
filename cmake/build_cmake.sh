@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUILD_CMAKE=yes
+BUILD_CMAKE=no
 
 source ../build_pkg.sh
 source ../gen_modules.sh
@@ -12,10 +12,10 @@ source ../gen_modules.sh
 #export CC=gcc-5
 #export CXX=g++-5
 
-musl_cross_root="${HOME}/local/musl-cross/x86_64-linux-musl"
-export CC=${musl_cross_root}/bin/x86_64-linux-musl-gcc
-export CXX=${musl_cross_root}/bin/x86_64-linux-musl-g++
-USE_MUSL_CROSS=yes
+# musl_cross_root="${HOME}/local/musl-cross/x86_64-linux-musl"
+# export CC=${musl_cross_root}/bin/x86_64-linux-musl-gcc
+# export CXX=${musl_cross_root}/bin/x86_64-linux-musl-g++
+# USE_MUSL_CROSS=yes
 
 function build_cmake() {
     local latest_ver=$(curl -sL https://cmake.org/download/ | \
@@ -35,4 +35,6 @@ function build_cmake() {
     make -j32
     make install
 }
-build_cmake
+#build_cmake
+
+guess_print_modfile cmake 3.5.2
