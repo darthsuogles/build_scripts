@@ -28,6 +28,7 @@ function build_szlib() {
     make install
 }
 build_szlib
+guess_print_modfile szlib "${szlib_ver}"
 
 function build_hdf5() {
     local latest_ver=$(curl -s www.hdfgroup.org/HDF5/release/obtainsrc.html | \
@@ -58,8 +59,5 @@ function build_hdf5() {
 }
 build_hdf5
 
-print_header hdf5 ${hdf5_ver}
-print_modline "prepend-path PATH ${hdf5_dir}/bin"
-print_modline "prepend-path CPATH ${hdf5_dir}/include"
-print_modline "prepend-path LIBRARY_PATH ${hdf5_dir}/lib"
+guess_print_modfile hdf5 ${hdf5_ver}
 print_modline "setenv HDF5_EXAMPLES ${hdf5_dir}/share/hdf5_examples"

@@ -3,7 +3,7 @@
 source ../build_pkg.sh
 source ../gen_modules.sh 
 
-BUILD_OPENBLAS=no
+BUILD_OPENBLAS=yes
 
 set -ex
 function configure_fn() { log_info "no need to configure"; }

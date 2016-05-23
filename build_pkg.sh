@@ -252,6 +252,9 @@ function prepare_pkg()
     eval ${pkg_name}_install_dir="'${_install_dir}'"
 }
 
+function find_tarball_name() {
+    perl -ne "print $1 if /((\w+?[_-]?)+?(\d+(\.\d+)*)([_-]+?\w+)?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/" "$@"
+}
 
 function guess_build_pkg() {
     [[ $# -lt 2 ]] && quit_with "usage: guess_build_pkg <pkg> <url> [configure_fn] [make_fn] [make_install_fn]"
@@ -279,14 +282,17 @@ function guess_build_pkg() {
      install_fn   : ${install_fn}
 EOF
 
-    local tarball_regex='print "$1\n" if /((\w+?[_-]?)+?(\d+(\.\d+)*)([_-]+?\w+)?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/'
-    local tarball=$(echo $(basename ${url}) | perl -ne "${tarball_regex}")
+    local tarball=$(echo $(basename ${url}) | find_tarball_name)
     [ -z "${tarball}" ] || local url=${url%/*}
 
     if [ "no" != "${USE_LATEST_VERSION}" ]; then
         log_info "attempt to get the latest version from the provided url"
-        local latest_tarball=$(curl -sL ${url} | perl -ne "${tarball_regex}" | sort -V | tail -n1)
-        local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+        local latest_tarball=$(curl -sL ${url} | find_tarball_name | sort -V | tail -n1)
+	if [ -n "${latest_tarball}" ]; then
+	    if [ "200" ==  "$(curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")" ]; then
+		    local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+	    fi
+	fi
     fi
     if [ -n "${latest_ver}" ]; then
         log_info "found version ${latest_ver} from user provided url"

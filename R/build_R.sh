@@ -1,19 +1,16 @@
 #!/bin/bash
 
+source ../build_pkg.sh 
+source ../gen_modules.sh
+
+BUILD_R=yes
 ver=3.2.5
 R_ARCH=opt
-
-function get_latest() {
-    local latest_ver=$(curl https://cran.r-project.org/src/base/R-3/ \
-                              | perl -ne 'print "$1\n" if /(R-(\d+(\.\d+)*)\.tar\.gz)/' | sort -nr | head -n1)
-    ver=$latest_ver
-}
 
 function sudo_build_deps() {
     sudo apt-get install libz-dev libbz2-dev libtre-dev liblzma-dev tcl-dev tk-dev \
          libcairo-dev libjpeg-dev libpng-dev libtiff-dev libpcre3-dev \
          libfftw3-dev libopenblas-dev
-
 }
 
 function configure_R_mkl() {
@@ -69,6 +66,6 @@ function configure_R_openblas() {
                 --with-x=no
 }
 
-make -j8
-#make check-all
-make install
+module load openblas
+guess_build_pkg R https://cran.cnr.berkeley.edu/src/base/R-3/R-3.3.0.tar.gz -c "configure_R_openblas"
+guess_print_modfile R ${R_ver}
