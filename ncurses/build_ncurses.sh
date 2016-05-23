@@ -3,7 +3,7 @@
 source ../build_pkg.sh
 source ../gen_modules.sh 
 
-BUILD_NCURSES=no
+BUILD_NCURSES=yes
 
 set -ex
 

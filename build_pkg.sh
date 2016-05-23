@@ -286,7 +286,11 @@ EOF
     if [ "no" != "${USE_LATEST_VERSION}" ]; then
         log_info "attempt to get the latest version from the provided url"
         local latest_tarball=$(curl -sL ${url} | perl -ne "${tarball_regex}" | sort -V | tail -n1)
-        local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+	if [ -n "${latest_tarball}" ]; then
+	    if [ "200" ==  "$(curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")" ]; then
+		local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+	    fi
+	fi
     fi
     if [ -n "${latest_ver}" ]; then
         log_info "found version ${latest_ver} from user provided url"

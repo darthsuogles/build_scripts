@@ -1,29 +1,28 @@
 #!/bin/bash
 
-ver_major=5
-ver_minor=18.2
-version=$ver_major.$ver_minor
+source ../build_pkg.sh
+source ../gen_modules.sh
 
-base_dir=$PWD
-build_dir=/scratch1/phi/perl
+BUILD_PERL=no
+INSTALLER_PERL_VERSION=5.20.1
 
-if [ ! -d $version ]; then
-    fname=perl-$version
-    tarball=$fname.tar.gz
+function build_perl() {
+    BASHR=~/.zshrc.perl
+    CPANMTMP=~/.cpanm
 
-    mkdir -p $build_dir; cd $build_dir
-    if [ ! -f $tarball ]; then
-	wget http://www.cpan.org/src/$ver_major.0/$tarball
-    fi
-    fname=`tar -xzvf $tarball | sed -e 's@/.*@@' | uniq` 
-    mv $fname $version
-    ln -s $build_dir/$version $base_dir/$version
-    rm $tarball
-    cd $base_dir
-fi
- 
-cd $version
-./Configure -des -Dprefix=$HOME/phi/local
-make -j8
-make test
-make install
+    perlbrew_dir=$(get_pkg_install_dir perlbrew dev)
+    export PERLBREW_ROOT=${perlbrew_dir}
+    export PERLBREW_HOME=${perlbrew_dir}
+
+    log_info "Installing perlbrew"
+    curl -k -L http://xrl.us/perlbrewinstall | bash
+
+    source ${PERLBREW_ROOT}/etc/bashrc
+    perlbrew -n install perl-${INSTALLER_PERL_VERSION}
+    perlbrew switch perl-${INSTALLER_PERL_VERSION}
+    perlbrew install-cpanm
+}
+[ "no" == "${BUILD_PERL}" ] || build_perl
+
+echo "source ${PERLBREW_ROOT}/etc/bashrc" >> ~/.zshrc.perl
+guess_print_modfile perlbrew dev
