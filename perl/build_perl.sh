@@ -3,7 +3,7 @@
 source ../build_pkg.sh
 source ../gen_modules.sh
 
-BUILD_PERL=no
+BUILD_PERL=yes
 INSTALLER_PERL_VERSION=5.20.1
 
 function build_perl() {
