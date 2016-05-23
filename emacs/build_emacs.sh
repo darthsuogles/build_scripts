@@ -16,7 +16,6 @@ function build_emacs() {
     prepare_pkg emacs $url $ver install_dir
     emacs_ver=${ver}
     emacs_dir=${install_dir}
-    echo ${install_dir}; exit
 
     cd $ver
     ./configure --prefix=$install_dir \
