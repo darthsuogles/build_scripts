@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUILD_CMAKE=no
+BUILD_CMAKE=yes
 
 source ../build_pkg.sh
 source ../gen_modules.sh

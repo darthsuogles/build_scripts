@@ -12,3 +12,4 @@ source ../gen_modules.sh
 )
 
 guess_print_modfile linuxbrew dev
+print_modline "setenv HOMEBREW_BUILD_FROM_SOURCE yes"
