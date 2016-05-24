@@ -6,9 +6,12 @@ source ../gen_modules.sh
 # \n
 # EOF
 
+module load git
 (cd $(get_install_root)
     mkdir -p linuxbrew && cd $_
-    git clone https://github.com/Linuxbrew/linuxbrew.git dev
+    [ -d dev ] || git clone https://github.com/Linuxbrew/linuxbrew.git dev
+    cd dev && git pull
+    git submodule update --init --remote --recursive
 )
 
 guess_print_modfile linuxbrew dev
