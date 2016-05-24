@@ -2,10 +2,6 @@
 
 source ../gen_modules.sh
 
-# ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)" <<EOF
-# \n
-# EOF
-
 module load git
 (cd $(get_install_root)
     mkdir -p linuxbrew && cd $_
