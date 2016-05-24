@@ -3,7 +3,7 @@
 source ../build_pkg.sh
 source ../gen_modules.sh
 
-BUILD_ZSH=no
+BUILD_ZSH=yes
 
 ver=5.2
 tarball=zsh-${ver}.tar.xz
