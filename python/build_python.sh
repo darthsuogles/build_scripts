@@ -5,17 +5,18 @@ source ../gen_modules.sh
 
 BUILD_PYTHON=yes
 
-module load sqlite
+module load sqlite linuxbrew
 
 function configure_fn() {
     local cflags="-mtune=native -O3 -g"
-    local ldflags="-static-libgcc -static-libstdc++"
+    export LIBRARY_PATH="$(brew --prefix)/lib"
+    export CPATH="$(brew --prefix)/include"
 
     ./configure --prefix=${install_dir} \
 		--enable-shared --with-thread \
 		--enable-loadable-sqlite-extensions \
-		CC=gcc CXX=g++ CFLAGS="${cflags}" \
-		LDFLAGS="${ldflags} -Wl,--rpath=${install_dir}/lib"    
+		CC=gcc CXX=g++ FC=gfortran CFLAGS="${CFLAGS} ${cflags}" \
+        LDFLAGS="${LDFLAGS} -Wl,-rpath=${install_dir}/lib"
 }
 
 guess_build_pkg python http://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz -c "configure_fn"
