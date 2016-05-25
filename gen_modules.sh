@@ -50,6 +50,7 @@ function guess_print_modfile() {
 
     local PKG="$(echo ${pkg} | tr '[:lower:]' '[:upper:]')"
     print_header ${pkg} ${ver}
+    export module_file=${module_file}
     print_modline "setenv ${PKG}_ROOT ${pkg_dir}"
     [ -d "${pkg_dir}/bin/" ]          && \
         print_modline "prepend-path PATH            ${pkg_dir}/bin"
@@ -59,4 +60,6 @@ function guess_print_modfile() {
         print_modline "prepend-path INFO_PATH       ${pkg_dir}/share/info"
     [ -d "${pkg_dir}/lib/pkgconfig" ] && \
         print_modline "prepend-path PKG_CONFIG_PATH ${pkg_dir}/lib/pkgconfig"
+
+    log_info "Automatic package config inference done ..."
 }
