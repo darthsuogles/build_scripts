@@ -1,14 +1,14 @@
 #!/bin/bash
 
-pkg=fftw
-ver=3.3.4
-
 source ../build_pkg.sh
-prepare_pkg $pkg ftp://ftp.$pkg.org/pub/$pkg/$pkg-$ver.tar.gz $ver install_dir
+source ../gen_modules.sh
 
-cd $ver
-./configure --prefix=$install_dir \
-    --enable-shared --enable-fma \
-    --enable-threads --enable-openmp
-make -j8
-make install
+BUILD_FFTW=yes
+
+function configure_fn() {
+    CC=gcc CXX=g++ FC=gfortran ./configure --prefix=$install_dir \
+      --enable-shared --enable-fma --enable-threads --enable-openmp
+}
+
+guess_build_pkg fftw ftp://ftp.fftw.org/pub/fftw/fftw-3.3.4.tar.gz -c "configure_fn"
+guess_print_modfile fftw ${fftw_ver}
