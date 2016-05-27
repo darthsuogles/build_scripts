@@ -5,8 +5,8 @@ source ../gen_modules.sh
 
 BUILD_PYTHON=yes
 
-module load linuxbrew
-brew install sqlite3 bzip2 xz
+module load linuxbrew sqlite3
+#brew install sqlite3 bzip2 xz
 
 function configure_fn() {
     local gcc6_flags="-static-libgcc -static-libstdc++"

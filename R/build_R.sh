@@ -37,31 +37,28 @@ function configure_R_mkl() {
 }
 
 function configure_R_openblas() {
+    module load linuxbrew
+    # brew install bzip2 zlib tre xz 
+    # brew install tcl-tk tre pcre
+    # brew install cairo jpeg jpeg-turbo libpng libtiff 
+    module load openblas fftw
     OPT_FLAGS="-O3 -funroll-loops -march=native"
 
+    export CPATH="$(brew --prefix)/include"
+    export LIBRARY_PATH="$(brew --prefix)/lib"
     ./configure --prefix=$install_dir \
                 --enable-R-profiling \
                 --enable-memory-profiling \
                 --enable-lto \
-                --with-tcltk=no \
-                --with-cairo=no \
-                --with-libpng=no \
-                --with-jpeglib=no \
-                --with-libtiff=no \
-                --with-system-zlib=yes \
-                --with-system-bzlib=yes \
-                --with-system-pcre=yes \
-                --with-system-tre=yes \
-                --with-system-xz=yes \
                 --with-blas --with-lapack \
                 CC="gcc -m64 -mtune=native" \
                 CXX="g++ -m64 -mtune=native" \
                 F77="gfortran -m64 -mtune=native" \
                 FC="gfortran -m64 -mtune=native" \
-                CPPFLAGS="-I$(brew --prefix)/include ${CPPFLAGS}" \
-                LDFLAGS="-L$(brew --prefix)/lib ${LDFLAGS}" \
+                CPPFLAGS="${CPPFLAGS} -I$(brew --prefix)/include" \
+                LDFLAGS="${LDFLAGS} -Wl,-rpath=$(brew --prefix)/lib -L$(brew --prefix)/lib" \
                 --with-x=no
 }
 
 url="https://cran.cnr.berkeley.edu/src/base/R-3/R-3.3.0.tar.gz"
-guess_build_pkg R "${url}" -c "configure_R_openblas" -d "openblas fftw zlib bzip2 linuxbrew"
+guess_build_pkg R "${url}" -c "configure_R_openblas" -d "linuxbrew openblas fftw zlib bzip2"
