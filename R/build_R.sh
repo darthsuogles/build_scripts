@@ -42,15 +42,18 @@ function configure_R_openblas() {
 
     ./configure --prefix=$install_dir \
                 --enable-R-profiling \
-                --enable-memory-profiling \
+                --enable-static \
+                --enable-shared \
                 --enable-lto \
                 --with-blas --with-lapack \
-                CC="gcc ${opt_flags}" \
-                CXX="g++ ${opt_flags}" \
-                F77="gfortran ${opt_flags}" \
-                FC="gfortran ${opt_flags}" \
+                CC=gcc CFLAGS="${CFLAGS} ${opt_flags}" \
+                CXX=g++ CXXFLAGS="${CXXFLAGS} ${opt_flags}" \
+                CXX1X=g++ CXX1XSTD="-std=c++11" \
+                F77=gfortran FFLAGS="${opt_flags}" \
+                FC=gfortran FCFLAGS="${opt_flags}" \
                 CPPFLAGS="${CPPFLAGS} -I$(brew --prefix)/include" \
                 LDFLAGS="${LDFLAGS} ${brew_ldflags}" \
+                JAVA_HOME="/usr/lib/jvm/java-7-oracle/" \
                 --with-x=no
 }
 

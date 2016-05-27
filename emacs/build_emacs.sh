@@ -15,3 +15,8 @@ function configure_fn() {
 
 url=http://gnu.mirrors.hoobly.com/gnu/emacs/emacs-24.5.tar.xz
 guess_build_pkg emacs ${url} -c "configure_fn"
+cat <<EOF > ${emacs_module_file}
+setalias("emacs-server", "${install_dir}/bin/emacs")
+setalias("emacs-client", "${install_dir}/bin/emacsclient")
+setalias("emacs", "${install_dir}/bin/emacs")
+EOF
