@@ -37,26 +37,20 @@ function configure_R_mkl() {
 }
 
 function configure_R_openblas() {
-    module load linuxbrew
-    # brew install bzip2 zlib tre xz 
-    # brew install tcl-tk tre pcre
-    # brew install cairo jpeg jpeg-turbo libpng libtiff 
-    module load openblas fftw
-    OPT_FLAGS="-O3 -funroll-loops -march=native"
+    local opt_flags="-O3 -funroll-loops -mtune=native"
+    local brew_ldflags="-Wl,-rpath=$(brew --prefix)/lib -L$(brew --prefix)/lib -Wl,-rpath=$(brew --prefix)/lib64 -L$(brew --prefix)/lib64"
 
-    export CPATH="$(brew --prefix)/include"
-    export LIBRARY_PATH="$(brew --prefix)/lib"
     ./configure --prefix=$install_dir \
                 --enable-R-profiling \
                 --enable-memory-profiling \
                 --enable-lto \
                 --with-blas --with-lapack \
-                CC="gcc -m64 -mtune=native" \
-                CXX="g++ -m64 -mtune=native" \
-                F77="gfortran -m64 -mtune=native" \
-                FC="gfortran -m64 -mtune=native" \
+                CC="gcc ${opt_flags}" \
+                CXX="g++ ${opt_flags}" \
+                F77="gfortran ${opt_flags}" \
+                FC="gfortran ${opt_flags}" \
                 CPPFLAGS="${CPPFLAGS} -I$(brew --prefix)/include" \
-                LDFLAGS="${LDFLAGS} -Wl,-rpath=$(brew --prefix)/lib -L$(brew --prefix)/lib" \
+                LDFLAGS="${LDFLAGS} ${brew_ldflags}" \
                 --with-x=no
 }
 
