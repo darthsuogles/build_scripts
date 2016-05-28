@@ -80,7 +80,6 @@ alias curl='_wisper_fetch curl'
 
 # Download and decompress a package specified by an url containing the tarball
 # e.g. http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.5.0.tar.gz
-#function update_pkg()
 function fetch_tarball()
 {
     [[ $# -eq 3 ]] || quit_with "[fectch_tarball] usage: <url> <ver> <tarball_var>"
@@ -275,14 +274,24 @@ function load_or_build_pkgs() {
 }
 
 function guess_build_pkg() {
-    [[ $# -lt 2 ]] && quit_with "usage: guess_build_pkg <pkg> <url> [configure_fn] [make_fn] [make_install_fn]"
+    [[ $# -lt 2 ]] && cat <<EOF && quit_with "require at least two arguments"
+usage: $0 <pkg> <url>
+       -t <build_type>
+       -c <configure_fn>
+       -b <build_fn>
+       -i <install_fn>
+       -d <pkg> [...]
+
+EOF
     set -ex
 
     local pkg=$1; local _pkg_="${pkg}"
-    local url=$2; local _url_="${url}"
+    local url=$2; local _url_="${url}"    
     shift 2
-    while getopts ":c:b:i:d:" opt "$@"; do
+    while getopts ":c:b:i:d:t:" opt "$@"; do
         case "${opt}" in 
+            t) local build_type="${OPTARG}"
+               ;;
             c) local configure_fn="${OPTARG}"
                ;;
             b) local build_fn="${OPTARG}"
@@ -295,6 +304,7 @@ function guess_build_pkg() {
                 ;;
         esac
     done
+    
 
     cat <<__EOF__
      pkg          : ${pkg}
@@ -333,13 +343,18 @@ __EOF__
         local ver=$(echo ${tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
     fi
     [ -n "${ver}" ] || quit_with "cannot get the correct version"
+
+    [ -n "${build_type}" ] && local ver=${ver}-${build_type}
     local _ver_=${ver}
-    eval "${pkg}_ver=${ver}"
-    
+    eval "${pkg}_ver=${ver}"   
+
     local PKG=$(echo ${pkg} | tr '[:lower:]' '[:upper:]')
     [ "no" == "$(eval "echo \$BUILD_${PKG}")" ] && return 0    
     local _url_="${url}/${tarball}"
     prepare_pkg ${pkg} ${url}/${tarball} ${ver} install_dir
+
+    # [ -d ${install_dir} ] && \
+    #     log_warn "install directory ${install} already exists, will be over-written"
 
     cd $ver
     if [ -n "${configure_fn}" ]; then        

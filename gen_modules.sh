@@ -116,7 +116,7 @@ whatis("Description: package ${pkg}")
 
 EOF
 
-    if [ -n ${deps_str} ]; then
+    if [ -n "${deps_str}" ]; then
         deps_list=($(echo ${deps_str} | tr ' ' '\n'))
         for dep in ${deps_list[@]}; do
             cat <<EOF | tee -a  ${module_file}
