@@ -255,7 +255,7 @@ function prepare_pkg()
 }
 
 function find_tarball_name() {
-    perl -ne "print $1 if /((\w+?[_-]?)+?(\d+(\.\d+)*)([_-]+?\w+)?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/" "$@"
+    perl -ne "print $1 if /((\w+?[_-]?)*?(\d+(\.\d+)*)([_-]+?\w+)?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/" "$@"
 }
 
 function load_or_build_pkgs() {

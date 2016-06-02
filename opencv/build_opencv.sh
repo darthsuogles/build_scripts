@@ -1,11 +1,6 @@
 #!/bin/bash
 
 source ../build_pkg.sh
-source ../gen_modules.sh 
-
-BUILD_OPENCV=yes
-
-module load python
 
 function configure_fn() {
     local python_dir="$(python3-config --prefix)"
@@ -22,6 +17,6 @@ function configure_fn() {
         ..
 }
 
-guess_build_pkg opencv https://github.com/Itseez/opencv/archive/3.1.0.zip \
-                -c "configure_fn"
-guess_print_modfile opencv ${opencv_ver}
+USE_LATEST_VERSION=no
+guess_build_pkg opencv ${PWD}/3.1.0.zip \
+                -c "configure_fn" -d "python openblas"
