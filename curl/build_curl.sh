@@ -1,16 +1,7 @@
 #!/bin/bash
 
-ver=7.37.0
-build_dir=/tmp/phi/curl
-install_dir=$HOME/local
-
 source ../build_pkg.sh
+source ../gen_modules.sh 
 
-mkdir -p $build_dir; cd $build_dir
-update_pkg http://curl.haxx.se/download/curl-$ver.tar.bz2 $ver
-mkdir $PWD/$ver; ln -s $build_dir/$ver $PWD/$ver/src
-
-cd $build_dir/$ver
-./configure --prefix=$install_dir
-make -j8
-make install
+guess_build_pkg curl http://curl.haxx.se/download/curl-7.37.0.tar.bz2
+guess_print_modfile curl ${curl_ver}
