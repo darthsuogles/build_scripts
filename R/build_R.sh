@@ -38,9 +38,9 @@ function configure_R_mkl() {
 
 function configure_R_openblas() {
     module load linuxbrew
-    # brew install bzip2 zlib tre xz 
-    # brew install tcl-tk tre pcre
-    # brew install cairo jpeg jpeg-turbo libpng libtiff 
+    brew install bzip2 zlib tre xz 
+    brew install tcl-tk tre pcre
+    brew install cairo jpeg jpeg-turbo libpng libtiff 
     module load openblas fftw
     OPT_FLAGS="-O3 -funroll-loops -march=native"
 
