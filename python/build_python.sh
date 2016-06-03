@@ -16,5 +16,6 @@ function configure_fn() {
 	LDFLAGS="${gcc6_flags} ${linuxbrew_flags} $(pkg-config sqlite3 --libs) -Wl,-rpath=${install_dir}/lib"
 }
 
+USE_LATEST_VERSION=no
 guess_build_pkg python http://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz \
     -c "configure_fn" -d "linuxbrew sqlite"
