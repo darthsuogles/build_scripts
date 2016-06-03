@@ -54,6 +54,10 @@ function guess_print_modfile() {
     print_modline "setenv ${PKG}_ROOT ${pkg_dir}"
     [ -d "${pkg_dir}/bin/" ]          && \
         print_modline "prepend-path PATH            ${pkg_dir}/bin"
+    [ -d "${pkg_dir}/lib" ]           && \
+	print_modline "prepend-path LIBRARY_PATH    ${pkg_dir}/lib"
+    [ -d "${pkg_dir}/include" ]       && \
+	print_modline "prepend-path CPATH           ${pkg_dir}/include"
     [ -d "${pkg_dir}/share/man" ]     && \
         print_modline "prepend-path MANPATH         ${pkg_dir}/share/man"
     [ -d "${pkg_dir}/share/info" ]    && \
