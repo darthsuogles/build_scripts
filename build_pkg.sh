@@ -247,7 +247,8 @@ function prepare_pkg()
     log_info "Moving to build dir $build_dir"
     cd ${build_dir}
     update_pkg $pkg_fpath $pkg_ver
-    [ -d "${_install_dir}/src/" ] || ln -sf "${build_dir}/${ver}" "${_install_dir}/src"
+    rm -f "${_install_dir}/src"
+    ln -s "${build_dir}/${ver}" "${_install_dir}/src"
 
     # Set the install dir to the return value
     eval $_res_var="'${_install_dir}'"
