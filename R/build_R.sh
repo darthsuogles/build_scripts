@@ -86,6 +86,6 @@ function configure_drgscl() {
 
 module purge
 url="https://cran.cnr.berkeley.edu/src/base/R-3/R-3.3.0.tar.gz"
-guess_build_pkg R "${url}" -t "lto" -c "configure_lto" -d "linuxbrew openblas fftw zlib bzip2 pcre curl"
+guess_build_pkg R "${url}" -t "lto" -c "configure_lto" -d "linuxbrew openblas fftw zlib bzip2 pcre"
 #guess_build_pkg R "${url}" -t "drgscl" -c "configure_drgscl" -d "linuxbrew toolchain openblas fftw zlib bzip2"
 #guess_build_pkg R "${url}" -c "configure_R_openblas" -d "linuxbrew openblas fftw zlib bzip2"
