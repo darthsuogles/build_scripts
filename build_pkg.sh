@@ -1,6 +1,7 @@
 #!/bin/bash
 
-script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_script_dir_="${script_dir}"
 source ${script_dir}/common.sh
 source "$(get_install_root)/Lmod/dev/lmod/lmod/init/bash"
 
@@ -256,12 +257,28 @@ function find_tarball_name() {
     perl -ne "print $1 if /((\w+?[_-]?)+?(\d+(\.\d+)*)([_-]+?\w+)?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/" "$@"
 }
 
+function load_or_build_pkgs() {
+    [[ $# -ne 2 ]] || >&2 echo "usage: $0 <pkg>"
+    for pkg in ${@}; do
+        if module load ${pkg} &>/dev/null; then
+            log_info "module ${pkg} already exists ;)"
+        else
+            log_info "building the package ${pkg}"
+            cd ${_script_dir_}/$pkg && ./build_${pkg}.sh
+            module load ${pkg}
+        fi
+    done
+}
+
 function guess_build_pkg() {
     [[ $# -lt 2 ]] && quit_with "usage: guess_build_pkg <pkg> <url> [configure_fn] [make_fn] [make_install_fn]"
+    set -ex
+
     local pkg=$1
     local url=$2
+    local _url_="${url}"
     shift 2
-    while getopts ":c:b:i:" opt "$@"; do
+    while getopts ":c:b:i:d:" opt "$@"; do
         case "${opt}" in 
             c) local configure_fn="${OPTARG}"
                ;;
@@ -269,30 +286,41 @@ function guess_build_pkg() {
                ;;
             i) local install_fn="${OPTARG}"       
                ;;
+            d) local deps_list="${OPTARG}"
+               ;;
             \?) quit_with "usage: guess_build_pkg <pkg> <url> [configure_fn] [make_fn] [make_install_fn]"
                 ;;
         esac
     done
 
-    cat <<EOF 
+    cat <<__EOF__
      pkg          : ${pkg}
      url          : ${url}
      configure_fn : ${configure_fn}
      build_fn     : ${build_fn}
      install_fn   : ${install_fn}
-EOF
+     dependencies : ${deps_list}
+__EOF__
+
+    echo "${deps_list}"
+    load_or_build_pkgs "${deps_list}"
 
     local tarball=$(echo $(basename ${url}) | find_tarball_name)
     [ -z "${tarball}" ] || local url=${url%/*}
 
     if [ "no" != "${USE_LATEST_VERSION}" ]; then
         log_info "attempt to get the latest version from the provided url"
-        local latest_tarball=$(curl -sL ${url} | find_tarball_name | sort -V | tail -n1)
-	if [ -n "${latest_tarball}" ]; then
-	    if [ "200" ==  "$(curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")" ]; then
-		    local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+        local latest_tarball=$(_wisper_fetch curl -sL ${url} | find_tarball_name | sort -V | tail -n1)
+	    if [ -n "${latest_tarball}" ]; then
+            local _resp_code="$(_wisper_fetch curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")"
+            if [ "200" == "${_resp_code}" ]; then
+                _resp_type=$(_wisper_fetch curl -sLI "${url}/${latest_tarball}" | \
+                                    perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
+                if [ "text/html" != "${_resp_type}" ]; then
+		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+                fi
+	        fi
 	    fi
-	fi
     fi
     if [ -n "${latest_ver}" ]; then
         log_info "found version ${latest_ver} from user provided url"
@@ -305,7 +333,8 @@ EOF
     eval "${pkg}_ver=${ver}"
     
     local PKG=$(echo ${pkg} | tr '[:lower:]' '[:upper:]')
-    [ "yes" == "$(eval "echo \$BUILD_${PKG}")" ] || return 0    
+    [ "no" == "$(eval "echo \$BUILD_${PKG}")" ] && return 0    
+    local _url_="${url}/${tarball}"
     prepare_pkg ${pkg} ${url}/${tarball} ${ver} install_dir
 
     cd $ver
@@ -324,10 +353,15 @@ EOF
     else
         make install
     fi
-    cat <<EOF 
+
+    cat <<EOF
       =======================================
       The package ${pkg} ${ver} is built in
          ${PWD}
       =======================================
 EOF
+
+    (source ${_script_dir_}/gen_modules.sh
+     guess_print_lua_modfile ${pkg} ${ver} ${_url_} "${deps_list}")
+    return 0
 }

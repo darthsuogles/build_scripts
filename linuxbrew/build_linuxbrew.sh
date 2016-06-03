@@ -1,14 +1,24 @@
 #!/bin/bash
 
+source ../build_pkg.sh 
 source ../gen_modules.sh
 
-module load git
+url=https://github.com/Linuxbrew/linuxbrew.git
+
+load_or_build_pkgs git
+
 (cd $(get_install_root)
     mkdir -p linuxbrew && cd $_
-    [ -d dev ] || git clone https://github.com/Linuxbrew/linuxbrew.git dev
+    [ -d dev ] || git clone ${url} dev
     cd dev && git pull
     git submodule update --init --remote --recursive
+    export HOMEBREW_BUILD_FROM_SOURCE=yes
+    brew tap homebrew/dupes homebrew/science homebrew/python
+    brew install zlib bzip2 xz readline pcre
 )
 
-guess_print_modfile linuxbrew dev
-print_modline "setenv HOMEBREW_BUILD_FROM_SOURCE yes"
+guess_print_lua_modfile linuxbrew dev ${url}
+cat <<EOF | tee -a ${linuxbrew_module_file}
+setenv("HOMEBREW_BUILD_FROM_SOURCE", "yes")
+EOF
+
