@@ -254,7 +254,7 @@ function prepare_pkg()
 }
 
 function find_tarball_name() {
-    perl -ne "print $1 if /((\w+?[_-]?)+?(\d+(\.\d+)*)([_-]+?\w+)?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/" "$@"
+    perl -ne 'print "$1\n" if /\/?((\w+?[_\-]?)*?(\d+(\.\d+)*)([_\-]+\w+?)*?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/'
 }
 
 function load_or_build_pkgs() {
@@ -306,11 +306,13 @@ __EOF__
     load_or_build_pkgs "${deps_list}"
 
     local tarball=$(echo $(basename ${url}) | find_tarball_name)
+    local _provided_tarball=${tarball}
     [ -z "${tarball}" ] || local url=${url%/*}
 
     if [ "no" != "${USE_LATEST_VERSION}" ]; then
         log_info "attempt to get the latest version from the provided url"
-        local latest_tarball=$(_wisper_fetch curl -sL ${url} | find_tarball_name | sort -V | tail -n1)
+        local _tb_list=($(_wisper_fetch curl -sL ${url} | find_tarball_name | sort -rV))
+        local latest_tarball=${_tb_list[0]}
 	    if [ -n "${latest_tarball}" ]; then
             local _resp_code="$(_wisper_fetch curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")"
             if [ "200" == "${_resp_code}" ]; then
@@ -327,7 +329,7 @@ __EOF__
         local ver=${latest_ver}
         local tarball=${latest_tarball}
     else
-        local ver=$(echo ${tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
     fi
     [ -n "${ver}" ] || quit_with "cannot get the correct version"
     eval "${pkg}_ver=${ver}"

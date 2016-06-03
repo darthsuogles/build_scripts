@@ -1,12 +1,6 @@
 #!/bin/bash
 
 source ../build_pkg.sh 
-source ../gen_modules.sh 
-
-BUILD_PYTHON=yes
-
-module load linuxbrew sqlite3
-#brew install sqlite3 bzip2 xz
 
 function configure_fn() {
     local gcc6_flags="-static-libgcc -static-libstdc++"
@@ -20,5 +14,5 @@ function configure_fn() {
 		LDFLAGS="${gcc6_flags} ${linuxbrew_flags} -Wl,-rpath=${install_dir}/lib"
 }
 
-guess_build_pkg python http://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz -c "configure_fn"
-guess_print_modfile python ${python_ver}
+guess_build_pkg python http://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz \
+    -c "configure_fn" -d "linuxbrew sqlite"
