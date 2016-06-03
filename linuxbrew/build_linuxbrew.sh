@@ -13,8 +13,8 @@ load_or_build_pkgs git
     cd dev && git pull
     git submodule update --init --remote --recursive
     export HOMEBREW_BUILD_FROM_SOURCE=yes
-    export PATH=$PWD/bin:$PATH
-    brew tap homebrew/dupes 
+    export PATH=${PWD}/bin:${PATH}
+    brew tap homebrew/dupes
     brew tap homebrew/science 
     brew tap homebrew/python
     brew install zlib bzip2 xz readline pcre

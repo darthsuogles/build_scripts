@@ -5,8 +5,6 @@ _script_dir_="${script_dir}"
 source ${script_dir}/common.sh
 source "$(get_install_root)/Lmod/dev/lmod/lmod/init/bash"
 
-#function find_scratch_dir() { mkdir -p $HOME/local/.drgscl/__build && echo "$_"; }
-
 function search_scratch_dirs() {   
     [[ $# != 1 ]] && quit_with "search_scratch_dirs <artifact_name>"
     local artifact="$1"
@@ -61,7 +59,9 @@ function check_tarball()
 }
 
 # Mimicking a human user
-function _wisper_fetch() {
+function _wisper_fetch() {    
+    unalias wget
+    unalias curl
     local user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/601.5.17 (KHTML, like Gecko) Version/9.1 Safari/601.5.17"
     local header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
     local cmd=$1; shift
@@ -75,10 +75,11 @@ function _wisper_fetch() {
             ;;
     esac
 }
+alias wget='_wisper_fetch wget'
+alias curl='_wisper_fetch curl'
 
 # Download and decompress a package specified by an url containing the tarball
 # e.g. http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.5.0.tar.gz
-#function update_pkg()
 function fetch_tarball()
 {
     [[ $# -eq 3 ]] || quit_with "[fectch_tarball] usage: <url> <ver> <tarball_var>"
@@ -246,7 +247,8 @@ function prepare_pkg()
     log_info "Moving to build dir $build_dir"
     cd ${build_dir}
     update_pkg $pkg_fpath $pkg_ver
-    [ -d "${_install_dir}/src/" ] || ln -sf "${build_dir}/${ver}" "${_install_dir}/src"
+    rm -f "${_install_dir}/src"
+    ln -s "${build_dir}/${ver}" "${_install_dir}/src"
 
     # Set the install dir to the return value
     eval $_res_var="'${_install_dir}'"
@@ -254,7 +256,7 @@ function prepare_pkg()
 }
 
 function find_tarball_name() {
-    perl -ne "print $1 if /((\w+?[_-]?)+?(\d+(\.\d+)*)([_-]+?\w+)?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/" "$@"
+    perl -ne 'print "$1\n" if /\/?((\w+?[_\-]?)*?(\d+(\.\d+)*)([_\-]+\w+?)*?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/'
 }
 
 function load_or_build_pkgs() {
@@ -271,15 +273,24 @@ function load_or_build_pkgs() {
 }
 
 function guess_build_pkg() {
-    [[ $# -lt 2 ]] && quit_with "usage: guess_build_pkg <pkg> <url> [configure_fn] [make_fn] [make_install_fn]"
+    [[ $# -lt 2 ]] && cat <<EOF && quit_with "require at least two arguments"
+usage: $0 <pkg> <url>
+       -t <build_type>
+       -c <configure_fn>
+       -b <build_fn>
+       -i <install_fn>
+       -d <pkg> [...]
+
+EOF
     set -ex
 
-    local pkg=$1
-    local url=$2
-    local _url_="${url}"
+    local pkg=$1; local _pkg_="${pkg}"
+    local url=$2; local _url_="${url}"    
     shift 2
-    while getopts ":c:b:i:d:" opt "$@"; do
+    while getopts ":c:b:i:d:t:" opt "$@"; do
         case "${opt}" in 
+            t) local build_type="${OPTARG}"
+               ;;
             c) local configure_fn="${OPTARG}"
                ;;
             b) local build_fn="${OPTARG}"
@@ -292,6 +303,7 @@ function guess_build_pkg() {
                 ;;
         esac
     done
+    
 
     cat <<__EOF__
      pkg          : ${pkg}
@@ -310,14 +322,16 @@ __EOF__
     log_info "restored name: ${pkg}"
 
     local tarball=$(echo $(basename ${url}) | find_tarball_name)
+    local _provided_tarball=${tarball}
     [ -z "${tarball}" ] || local url=${url%/*}
 
     if [ "no" != "${USE_LATEST_VERSION}" ]; then
         log_info "attempt to get the latest version from the provided url"
-        local latest_tarball="$(_wisper_fetch curl -sL "${url}" | find_tarball_name | sort -V | tail -n1)"
-	if [ -n "${latest_tarball}" ]; then
-	    local _resp_code="$(_wisper_fetch curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")"
-	    if [ "200" == "${_resp_code}" ]; then
+        local _tb_list=($(_wisper_fetch curl -sL ${url} | find_tarball_name | sort -rV))
+        local latest_tarball=${_tb_list[0]}
+	    if [ -n "${latest_tarball}" ]; then
+            local _resp_code="$(_wisper_fetch curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")"
+            if [ "200" == "${_resp_code}" ]; then
                 _resp_type=$(_wisper_fetch curl -sLI "${url}/${latest_tarball}" | \
 		    perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
                 if [ "text/html" != "${_resp_type}" ]; then
@@ -331,15 +345,21 @@ __EOF__
         local ver=${latest_ver}
         local tarball=${latest_tarball}
     else
-        local ver=$(echo ${tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
     fi
     [ -n "${ver}" ] || quit_with "cannot get the correct version"
-    eval "${pkg}_ver=${ver}"
-    
+
+    [ -n "${build_type}" ] && local ver=${ver}-${build_type}
+    local _ver_=${ver}
+    eval "${pkg}_ver=${ver}"   
+
     local PKG=$(echo ${pkg} | tr '[:lower:]' '[:upper:]')
     [ "no" == "$(eval "echo \$BUILD_${PKG}")" ] && return 0    
     local _url_="${url}/${tarball}"
     prepare_pkg ${pkg} ${url}/${tarball} ${ver} install_dir
+
+    # [ -d ${install_dir} ] && \
+    #     log_warn "install directory ${install} already exists, will be over-written"
 
     cd $ver
     if [ -n "${configure_fn}" ]; then        
@@ -366,6 +386,6 @@ __EOF__
 EOF
 
     (source ${_script_dir_}/gen_modules.sh
-     guess_print_lua_modfile ${pkg} ${ver} ${_url_} "${deps_list}")
+     guess_print_lua_modfile ${_pkg_} ${_ver_} ${_url_} "${deps_list}")
     return 0
 }
