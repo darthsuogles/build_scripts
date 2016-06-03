@@ -261,17 +261,15 @@ function find_tarball_name() {
 
 function load_or_build_pkgs() {
     [[ $# -ne 2 ]] || quit_with "usage: $0 <pkg>"
-    local _last_decl_=${pkg}
-    for pkg in ${@}; do
-        if module load ${pkg} &>/dev/null; then
-            log_info "module ${pkg} already exists ;)"
+    for _i_pkg in ${@}; do
+        if module load ${_i_pkg} &>/dev/null; then
+            log_info "module ${_i_pkg} already exists"
         else
-            log_info "building the package ${pkg}"
-            cd ${_script_dir_}/$pkg && ./build_${pkg}.sh
-            module load ${pkg}
+            log_info "building the package ${_i_pkg}"
+            cd ${_script_dir_}/${_i_pkg} && ./build_${_i_pkg}.sh
+            module load ${_i_pkg}
         fi
     done
-    pkg=${_last_decl_}
 }
 
 function guess_build_pkg() {
@@ -316,8 +314,12 @@ EOF
      dependencies : ${deps_list}
 __EOF__
 
-    echo "${deps_list}"
+    local _curr_pkg="${pkg}"
+    log_info "${deps_list}"
+    local pkg="NO_SUCH_PKG"
     load_or_build_pkgs "${deps_list}"
+    local pkg="${_curr_pkg}"
+    log_info "restored name: ${pkg}"
 
     local tarball=$(echo $(basename ${url}) | find_tarball_name)
     local _provided_tarball=${tarball}
@@ -331,12 +333,12 @@ __EOF__
             local _resp_code="$(_wisper_fetch curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")"
             if [ "200" == "${_resp_code}" ]; then
                 _resp_type=$(_wisper_fetch curl -sLI "${url}/${latest_tarball}" | \
-                                    perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
+		    perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
                 if [ "text/html" != "${_resp_type}" ]; then
-		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+		    local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
                 fi
-	        fi
 	    fi
+	fi
     fi
     if [ -n "${latest_ver}" ]; then
         log_info "found version ${latest_ver} from user provided url"
