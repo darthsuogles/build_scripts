@@ -120,7 +120,7 @@ whatis("Description: package ${pkg}")
 
 EOF
 
-    if [ -n ${deps_str} ]; then
+    if [ -n "${deps_str}" ]; then
         deps_list=($(echo ${deps_str} | tr ' ' '\n'))
         for dep in ${deps_list[@]}; do
             cat <<EOF | tee -a  ${module_file}
@@ -130,10 +130,12 @@ EOF
     fi
 
     local PKG="$(echo ${pkg} | tr '[:lower:]' '[:upper:]')"
-
     cat <<EOF | tee -a ${module_file}
 setenv("${PKG}_ROOT", "${pkg_dir}")
 EOF
+
+    eval "${pkg}_module_file=${module_file}"
+    [ "no" == "MODULE_INFER_LAYOUT" ] && return 0
 
     [ -d "${pkg_dir}/bin/" ] && cat <<EOF | tee -a ${module_file}
 prepend_path("PATH", "${pkg_dir}/bin")
@@ -164,6 +166,5 @@ EOF
 prepend_path("PKG_CONFIG_PATH", "${pkg_dir}/lib/pkgconfig")
 EOF
 
-    eval "${pkg}_module_file=${module_file}"
     return 0
 }

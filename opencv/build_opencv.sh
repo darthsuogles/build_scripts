@@ -1,11 +1,6 @@
 #!/bin/bash
 
 source ../build_pkg.sh
-source ../gen_modules.sh 
-
-BUILD_OPENCV=yes
-
-module load python
 
 function configure_fn() {
     local python_dir="$(python3-config --prefix)"
@@ -16,12 +11,17 @@ function configure_fn() {
         -D CMAKE_INSTALL_PREFIX:PATH=${install_dir} \
         -D CMAKE_BUILD_TYPE=RELEASE \
         -D BUILD_PYTHON_SUPPORT:BOOL=ON \
+        -D BUILD_opencv_python2:BOOL=OFF \
         -D PYTHON_LIBRARY:PATH=${python_basedir}/lib \
         -D PYTHON_INCLUDE_DIR:PATH=$python_basedir/include/python${python_ver%.*} \
-        -D USE_CUDA:BOOL=ON \
+        -D WITH_IPP:BOOL=OFF -D WITH_IPP_A:BOOL=OFF \
+        -D USE_CUDA:BOOL=OFF \
         ..
 }
 
+function build_fn() {
+    LD_LIBRARY_PATH="$(brew --prefix)/lib" make -j64
+}
+
 guess_build_pkg opencv https://github.com/Itseez/opencv/archive/3.1.0.zip \
-                -c "configure_fn"
-guess_print_modfile opencv ${opencv_ver}
+                -c "configure_fn" -b "build_fn" -d "python openblas"
