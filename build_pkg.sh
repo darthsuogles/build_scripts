@@ -130,7 +130,7 @@ function fetch_tarball()
     if [ "yes" != FORCE_DOWNLOAD_TARBALL ]; then
         log_info "searching directories to see if the tarball has been downloaded"
         local existing_tarball=$(search_scratch_dirs ${tarball})
-        [ -n "${existing_tarball}" ] && mv ${existing_tarball} .
+        [ -f "${existing_tarball}" ] && mv ${existing_tarball} .
     fi
     if [ ! -f $tarball ]; then
 	    url_protocol=${url%%://*} 
@@ -206,7 +206,8 @@ function update_pkg()
     [ -d $fname ] || quit_with "[update_pkg]: cannot find the extracted directory"
     [ "$fname" == "$ver" ] || mv $fname $ver
     [ -d $ver ] || quit_with "[update_pkg]: failed to create directory $PWD/$ver"
-    rm $tarball
+    [ "yes" == "${FORCE_REMOVE_TARBALL}" ] && rm $tarball
+    return 0
 }
 
 function get_pkg_install_dir() {
@@ -333,9 +334,9 @@ __EOF__
             local _resp_code="$(_wisper_fetch curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")"
             if [ "200" == "${_resp_code}" ]; then
                 _resp_type=$(_wisper_fetch curl -sLI "${url}/${latest_tarball}" | \
-		    perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
+		                            perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
                 if [ "text/html" != "${_resp_type}" ]; then
-		    local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)/')
                 fi
 	    fi
 	fi
@@ -345,9 +346,10 @@ __EOF__
         local ver=${latest_ver}
         local tarball=${latest_tarball}
     else
-        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+(\.\d+)*)/')
+        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)/')
     fi
     [ -n "${ver}" ] || quit_with "cannot get the correct version"
+    local ver="$(echo "${ver}" | tr '_' '.')"
 
     [ -n "${build_type}" ] && local ver=${ver}-${build_type}
     local _ver_=${ver}
