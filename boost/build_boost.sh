@@ -14,7 +14,11 @@ function c_fn() {
                                     tail -n1)
     local python3_libs=${python3_prefix}/lib
 
-    cat <<EOF > ./project-config.jam 
+    log_info "Bootstrapping and removing the default config file"
+    local proj_config="${PWD}/project-config.jam"
+    ./bootstrap.sh && rm -f ${proj_config}
+
+    cat <<EOF > ${proj_config}
 import option ;
 import feature ;
 
@@ -40,11 +44,13 @@ option.set includedir : ${install_dir}/include ;
 option.set keep-going : false ;
 
 EOF
+    return 0
 }
 
 function b_fn() {
     echo -e "Building ... patience"
     ./b2 install
+    return 0
 }
 
 url=http://downloads.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.bz2 
