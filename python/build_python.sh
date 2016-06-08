@@ -2,7 +2,8 @@
 
 source ../build_pkg.sh 
 function configure_fn() {
-    local opt_flags="-O3 -mtune=native -fgraphite -fgraphite-identity -floop-block -floop-interchange -floop-strip-mine -floop-parallelize-all -floop-unroll-and-jam -ftree-loop-linear"
+    #local opt_flags="-O3 -mtune=native -fgraphite -fgraphite-identity -floop-block -floop-interchange -floop-strip-mine -floop-parallelize-all -floop-unroll-and-jam -ftree-loop-linear"
+    local opt_flags="-O3 -mtune=native"
     local brew_ldflags="-Wl,-rpath=$(brew --prefix)/lib -L$(brew --prefix)/lib -Wl,-rpath=$(brew --prefix)/lib64 -L$(brew --prefix)/lib64"
     local gcc6_ldflags="-static-libgcc -static-libstdc++"
     ./configure --prefix=${install_dir} \
