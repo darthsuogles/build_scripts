@@ -5,13 +5,13 @@ source ../gen_modules.sh
 
 url=https://github.com/Linuxbrew/linuxbrew.git
 
-load_or_build_pkgs git
+load_or_build_pkgs curl
 
 (cd $(get_install_root)
     mkdir -p linuxbrew && cd $_
     [ -d dev ] || git clone ${url} dev
     cd dev && git pull
-    git submodule update --init --remote --recursive
+    git submodule update --init --recursive
     export HOMEBREW_BUILD_FROM_SOURCE=yes
     export PATH=${PWD}/bin:${PATH}
     brew tap homebrew/dupes
