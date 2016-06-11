@@ -4,9 +4,8 @@
 source ../build_pkg.sh 
 source ../gen_modules.sh 
 
-module load python openmpi
-BUILD_PETSC=no
-BUILD_SLEPC=yes
+# BUILD_PETSC=no
+# BUILD_SLEPC=yes
 ARCH=linux-gnu
 
 function configure_fn() {
@@ -24,20 +23,19 @@ function configure_fn() {
 }
 function build_fn() { make all test; }
 
-# http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.7.0.tar.gz
-guess_build_pkg petsc $PWD/petsc-lite-3.7.0.tar.gz \
-                -c "configure_fn" -b "build_fn"
+url=http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.7.0.tar.gz
+guess_build_pkg petsc ${url} -c "configure_fn" -b "build_fn" -d "openblas openmpi python"
+guess_print_lua_modfile petsc ${petsc_ver} ${url}
 
-guess_print_modfile petsc ${petsc_ver}
-petsc_dir="$(get_pkg_install_dir petsc ${petsc_ver})"
-print_modline "setenv PETSC_DIR ${petsc_dir}"
-print_modline "setenv PETSC_ARCH ${petsc_ver}-linux-gnu"
-module load petsc
-pip3 install petsc4py
+# petsc_dir="$(get_pkg_install_dir petsc ${petsc_ver})"
+# print_modline "setenv PETSC_DIR ${petsc_dir}"
+# print_modline "setenv PETSC_ARCH ${petsc_ver}-linux-gnu"
+# module load petsc
+# pip3 install petsc4py
 
-export PETSC_DIR=${petsc_dir}
-export PETSC_ARCH=${petsc_ver}-${ARCH}
-log_info "Moving PETSC_DIR to the install dir $PETSC_DIR"
+# export PETSC_DIR=${petsc_dir}
+# export PETSC_ARCH=${petsc_ver}-${ARCH}
+# log_info "Moving PETSC_DIR to the install dir $PETSC_DIR"
 
-guess_build_pkg slepc ${PWD}/slepc-3.6.3.tar.gz
-guess_print_modfile slepc ${slepc_ver}
+# # guess_build_pkg slepc ${PWD}/slepc-3.6.3.tar.gz
+# # guess_print_lua_modfile slepc ${slepc_ver} ${url}
