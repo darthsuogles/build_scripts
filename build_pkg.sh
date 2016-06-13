@@ -60,8 +60,8 @@ function check_tarball()
 
 # Mimicking a human user
 function _wisper_fetch() {    
-    unalias wget
-    unalias curl
+    which wget &>/dev/null  && unalias wget || log_info "wget not found?"
+    which curl &>/dev/null  && unalias wget || log_info "curl not found?"
     local user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/601.5.17 (KHTML, like Gecko) Version/9.1 Safari/601.5.17"
     local header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
     local cmd=$1; shift
