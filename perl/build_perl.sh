@@ -18,7 +18,7 @@ function build_perl() {
     curl -k -L http://xrl.us/perlbrewinstall | bash
 
     source ${PERLBREW_ROOT}/etc/bashrc
-    perlbrew -n install perl-${INSTALLER_PERL_VERSION}
+    CC=gcc CXX=g++ perlbrew -n install perl-${INSTALLER_PERL_VERSION}
     perlbrew switch perl-${INSTALLER_PERL_VERSION}
     perlbrew install-cpanm
 }

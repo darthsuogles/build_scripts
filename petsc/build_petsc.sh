@@ -13,13 +13,16 @@ function configure_fn() {
     export PETSC_DIR=${PWD}
 
     ./configure --prefix=$install_dir \
-                --with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 \
-                --with-shared-libraries \
-                --with-debugging=no \
-                --with-openmpi=1 \
-                --download-fblaslapack \
-                --download-scalapack \
-                --download-metis --download-parmetis    
+	COPTFLAGS="-g -O3 -mtune=native" \
+	CXXOPTFLAGS="-g -O3 -mtune=native" \
+	FOPTFLAGS="-g -O3 -mtune=native" \
+        --with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 \
+        --with-shared-libraries \
+        --with-debugging=no \
+        --with-openmpi=1 \
+        --download-fblaslapack \
+        --download-scalapack \
+        --download-metis --download-parmetis    
 }
 function build_fn() { make all test; }
 

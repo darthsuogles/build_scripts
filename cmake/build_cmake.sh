@@ -5,18 +5,6 @@ BUILD_CMAKE=yes
 source ../build_pkg.sh
 source ../gen_modules.sh
 
-#module load toolchain
-#export CC=${TOOLCHAIN_ROOT}/bin/gcc
-#export CXX=${TOOLCHAIN_ROOT}/bin/g++
-
-#export CC=gcc-5
-#export CXX=g++-5
-
-# musl_cross_root="${HOME}/local/musl-cross/x86_64-linux-musl"
-# export CC=${musl_cross_root}/bin/x86_64-linux-musl-gcc
-# export CXX=${musl_cross_root}/bin/x86_64-linux-musl-g++
-# USE_MUSL_CROSS=yes
-
 function build_cmake() {
     local latest_ver=$(curl -sL https://cmake.org/download/ | \
                               perl -ne 'print "$1\n" if /cmake-(\d+(\.\d+)*)\.tar\.gz/' | head -n1)
