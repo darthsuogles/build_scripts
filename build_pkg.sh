@@ -60,8 +60,8 @@ function check_tarball()
 
 # Mimicking a human user
 function _wisper_fetch() {    
-    unalias wget
-    unalias curl
+    which wget &>/dev/null  && unalias wget || log_info "wget not found?"
+    which curl &>/dev/null  && unalias wget || log_info "curl not found?"
     local user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/601.5.17 (KHTML, like Gecko) Version/9.1 Safari/601.5.17"
     local header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
     local cmd=$1; shift
@@ -257,7 +257,7 @@ function prepare_pkg()
 }
 
 function find_tarball_name() {
-    perl -ne 'print "$1\n" if /\/?((\w+?[_\-]?)*?(\d+(\.\d+)*)([_\-]+\w+?)*?\.(tar(\.gz|\.bz2)*|tgz|tbz2|zip))/'
+    perl -ne 'print "$1\n" if /\/?((\w+?[_\-]?)*?(\d+(\.\d+)*)([_\-]+\w+?)*?\.(tar(\.gz|\.bz2|\.xz)*|tgz|tbz2|zip))/'
 }
 
 function load_or_build_pkgs() {
@@ -387,7 +387,7 @@ __EOF__
       =======================================
 EOF
 
-    (source ${_script_dir_}/gen_modules.sh
-     guess_print_lua_modfile ${_pkg_} ${_ver_} ${_url_} "${deps_list}")
+    source ${_script_dir_}/gen_modules.sh
+    guess_print_lua_modfile ${_pkg_} ${_ver_} ${_url_} "${deps_list}"
     return 0
 }

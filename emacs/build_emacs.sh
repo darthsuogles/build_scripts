@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ../build_pkg.sh
+source ../gen_modules.sh
 
 function configure_fn() {
     ./configure --prefix=${install_dir} \
@@ -13,10 +14,13 @@ function configure_fn() {
 	            --without-x
 }
 
-url=http://gnu.mirrors.hoobly.com/gnu/emacs/emacs-24.5.tar.xz
+USE_LATEST_VERSION=no
+ver=24.5
+url=http://gnu.mirrors.hoobly.com/gnu/emacs/emacs-${ver}.tar.xz
 guess_build_pkg emacs ${url} -c "configure_fn"
-cat <<EOF > ${emacs_module_file}
-setalias("emacs-server", "${install_dir}/bin/emacs")
-setalias("emacs-client", "${install_dir}/bin/emacsclient")
-setalias("emacs", "${install_dir}/bin/emacs")
+guess_print_lua_modfile emacs ${ver} ${url} 
+cat <<EOF | tee -a ${emacs_module_file}
+set_alias("emacs-server", "${install_dir}/bin/emacs")
+set_alias("emacs-client", "${install_dir}/bin/emacsclient")
+set_alias("emacs", "${install_dir}/bin/emacs")
 EOF
