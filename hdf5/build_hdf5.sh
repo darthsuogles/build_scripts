@@ -12,16 +12,17 @@ function c_fn() {
                 --enable-build-mode=production \
                 --disable-dependency-tracking \
                 --enable-fortran \
+                --enable-cxx \
                 --with-szlib=${SZLIB_ROOT} \
                 --enable-filters=all \
                 --enable-static=yes \
                 --enable-shared=yes \
-                --enable-parallel
+                LDFLAGS="-Wl,-rpath=${SZLIB_ROOT}/lib -L${SZLIB_ROOT}/lib"
 }
 
 function b_fn() {
-    make -j32
-    #make check    
+    make -j64
+    make check    
 }
 
 function i_fn() {
