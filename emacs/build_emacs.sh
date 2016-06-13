@@ -13,6 +13,7 @@ function configure_fn() {
 	            --without-x
 }
 
+USE_LATEST_VERSION=no
 url=http://gnu.mirrors.hoobly.com/gnu/emacs/emacs-24.5.tar.xz
 guess_build_pkg emacs ${url} -c "configure_fn"
 cat <<EOF > ${emacs_module_file}

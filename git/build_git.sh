@@ -3,6 +3,8 @@
 __pwd__="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source ${__pwd__}/../build_pkg.sh 
 
+module load linuxbrew
+
 function c_fn() {
     ./configure --prefix=${install_dir} \
         --with-expat --with-curl --with-openssl
