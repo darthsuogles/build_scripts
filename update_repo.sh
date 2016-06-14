@@ -3,7 +3,7 @@
 git add .
 git add -f *.sh
 
-for fname in `find $PWD -maxdepth 3 -type f  -name "build_*.sh"`; do 
+for fname in `find $PWD -maxdepth 3 -type f  -name "build_*.sh" -o -name "install_*.sh"`; do 
     git add -f $fname
 done
 
