@@ -2,6 +2,8 @@
 
 source ../build_pkg.sh
 
+set -ex
+
 if ! module load szlib; then
     guess_build_pkg szlib "http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz" -d "openmpi"
 fi
@@ -11,18 +13,21 @@ function c_fn() {
     ./configure --prefix=${install_dir} \
                 --enable-build-mode=production \
                 --disable-dependency-tracking \
-                --enable-fortran \
                 --enable-cxx \
+                --enable-parallel \
                 --with-szlib=${SZLIB_ROOT} \
                 --enable-filters=all \
                 --enable-static=yes \
                 --enable-shared=yes \
-                LDFLAGS="-Wl,-rpath=${SZLIB_ROOT}/lib -L${SZLIB_ROOT}/lib"
+                --enable-unsupported \
+                CC=mpicc CXX=mpicxx \
+                CPPFLAGS="-I${OPENMPI_ROOT}/include -I${SZLIB_ROOT}/include" \
+                LDFLAGS="-Wl,-rpath=${OPENMPI_ROOT}/lib -L${OPENMPI_ROOT}/lib -Wl,-rpath=${SZLIB_ROOT}/lib -L${SZLIB_ROOT}/lib"
 }
 
 function b_fn() {
     make -j64
-    make check    
+    #make check    
 }
 
 function i_fn() {

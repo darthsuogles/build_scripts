@@ -1,14 +1,10 @@
 #!/bin/bash
 
 source ../build_pkg.sh
-source ../gen_modules.sh 
 
-BUILD_ZMQ=yes
-BUILD_LIBSODIUM=no
+url=https://github.com/jedisct1/libsodium/releases/download/1.0.10/libsodium-1.0.10.tar.gz
+guess_build_pkg libsodium ${url}
 
-guess_build_pkg libsodium $PWD/libsodium-1.0.9.tar.gz
-guess_print_modfile libsodium ${libsodium_ver}
-module load libsodium
+url=https://github.com/zeromq/zeromq4-1/releases/download/v4.1.4/zeromq-4.1.4.tar.gz
+guess_build_pkg zmq ${url} -d "linuxbrew libsodium"
 
-guess_build_pkg zmq $PWD/zeromq-4.1.4.tar.gz
-guess_print_modfile zmq ${zmq_ver}
