@@ -338,9 +338,10 @@ __EOF__
                 if [ "text/html" != "${_resp_type}" ]; then
 		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)/')
                 fi
+	        fi
 	    fi
-	fi
     fi
+
     if [ -n "${latest_ver}" ]; then
         log_info "found version ${latest_ver} from user provided url"
         local ver=${latest_ver}
@@ -353,21 +354,20 @@ __EOF__
 
     [ -n "${build_type}" ] && local ver=${ver}-${build_type}
     local _ver_=${ver}
-    eval "${pkg}_ver=${ver}"   
+    eval "${pkg}_ver=${ver}"    
 
     local PKG=$(echo ${pkg} | tr '[:lower:]' '[:upper:]')
     [ "no" == "$(eval "echo \$BUILD_${PKG}")" ] && return 0    
     local _url_="${url}/${tarball}"
+    eval "${pkg}_url=${_url_}"
     prepare_pkg ${pkg} ${url}/${tarball} ${ver} install_dir
-
-    # [ -d ${install_dir} ] && \
-    #     log_warn "install directory ${install} already exists, will be over-written"
+    eval "${pkg}_dir=${install_dir}"
 
     cd $ver
     if [ -n "${configure_fn}" ]; then        
         eval ${configure_fn} "${install_dir}"
     else
-        ./configure --prefix=${install_dir}
+        ./configure --prefix="${install_dir}"
     fi
     if [ -n "${build_fn}" ]; then
         eval ${build_fn}

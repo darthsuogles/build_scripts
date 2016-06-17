@@ -1,22 +1,18 @@
 #!/bin/bash
 
-ver=0.84
+source ../build_pkg.sh 
 
-module load intel
-BLAS_LIBS="-L$MKLROOT/lib/intel64  -lmkl_rt -lpthread -lm"
-BLAS_INC="-I$MKLROOT/include"
-module unload intel
+function c_fn() {
+    mkdir -p build-tree && cd $_
 
-source ../build_pkg.sh
-prepare_pkg elemental http://libelemental.org/pub/releases/Elemental-$ver.tgz $ver install_dir
+    CC=gcc CXX=g++ FC=gfortran cmake \
+      -D CMAKE_INSTALL_PREFIX="${install_dir}" \
+      -D CMAKE_CXX_COMPILER=g++ \
+      -D CMAKE_C_COMPILER=gcc \
+      -D CMAKE_Fortran_COMPILER=gfortran \
+      -D CMAKE_BUILD_TYPE=HybridRelease \
+      ..
+}
 
-mkdir -p build-tree-$ver; cd build-tree-$ver
-
-CC=gcc CXX=g++ FC=gfortran cmake ../$ver \
-    -DCMAKE_INSTALL_PREFIX=$install_dir \
-    -DCFLAGS="$BLAS_INC" \
-    -DCXX_FLAGS="-std=c++11 $BLAS_INC" \
-    -DMATH_LIBS="$BLAS_LIBS -lgfortran"
-
-make -j8
-make install
+url=https://github.com/elemental/Elemental.git
+guess_build_pkg elemental ${url} -c "c_fn" -d "linuxbrew openblas openmpi"
