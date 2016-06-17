@@ -20,7 +20,6 @@ function configure_fn() {
         --with-debugging=no \
         --with-openmpi=1 \
         --with-hdf5=1 \
-        --with-elemental=1 \
         --download-fblaslapack \
         --download-scalapack \
         --download-metis --download-parmetis    
@@ -28,7 +27,7 @@ function configure_fn() {
 function build_fn() { make all test; }
 
 url=http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.7.0.tar.gz
-guess_build_pkg petsc ${url} -c "configure_fn" -b "build_fn" -d "openblas openmpi python hdf5 elemental"
+guess_build_pkg petsc ${url} -c "configure_fn" -b "build_fn" -d "openblas openmpi python hdf5"
 
 cat <<EOF | tee -a "${petsc_module_file}"
 setenv("PETSC_DIR", "${petsc_dir}")

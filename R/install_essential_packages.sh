@@ -16,6 +16,7 @@ EOF
 
 cat <<EOF | tee -a "${_fname}"
 install.packages("Rmpi", configure.args=c(
+                        "LDFLAGS='-Wl,-rpath -Wl,${OPENMPI_ROOT}/lib -L${OPENMPI_ROOT}/lib'",
                         "--with-Rmpi-type=OPENMPI", 
                         "--with-Rmpi-libpath=${OPENMPI_ROOT}/lib", 
                         "--with-Rmpi-include=${OPENMPI_ROOT}/include"))
@@ -26,6 +27,7 @@ install.packages(c("Rcpp", "RcppEigen", "RcppArmadillo", "RInside", "RcppCNPy"))
 EOF
 
 cat <<EOF | tee -a "${_fname}"
+install.packages('devtools')
 require(devtools)
 install_github("mannau/h5", args = "--configure-vars='LIBS=-L${HDF5_ROOT}/lib CPPFLAGS=-I${HDF5}/include'")
 EOF
