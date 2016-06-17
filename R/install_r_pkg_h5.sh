@@ -12,6 +12,8 @@ local({r <- getOption("repos")
 require(devtools)
 require(Rcpp)
 
+options(unzip = 'internal')
+
 _EOF_R_PKG_
 
 module load hdf5/5 szlib openmpi
