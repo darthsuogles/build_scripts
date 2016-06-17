@@ -11,5 +11,4 @@ function c_fn() {
 }
 
 url="https://www.kernel.org/pub/software/scm/git/git-2.8.4.tar.xz"
-guess_build_pkg git "${url}" -d "curl"
-
+guess_build_pkg git "${url}" -d "linuxbrew curl"

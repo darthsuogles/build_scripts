@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source ../build_pkg.sh
-source ../gen_modules.sh
+source ../gen_modules.sh 
 
 function configure_fn() {
     ./configure --prefix=${install_dir} \
@@ -16,11 +16,20 @@ function configure_fn() {
 
 USE_LATEST_VERSION=no
 ver=24.5
-url=http://gnu.mirrors.hoobly.com/gnu/emacs/emacs-${ver}.tar.xz
-guess_build_pkg emacs ${url} -c "configure_fn"
+url="http://gnu.mirrors.hoobly.com/gnu/emacs/emacs-${ver}.tar.xz"
+#guess_build_pkg emacs ${url} -c "configure_fn"
 guess_print_lua_modfile emacs ${ver} ${url} 
+
+[ -n "${emacs_dir}" ] || emacs_dir="$(get_install_root)/emacs/${ver}"
 cat <<EOF | tee -a ${emacs_module_file}
-set_alias("emacs-server", "${install_dir}/bin/emacs")
-set_alias("emacs-client", "${install_dir}/bin/emacsclient")
-set_alias("emacs", "${install_dir}/bin/emacs")
+set_alias("emacs-server", "${emacs_dir}/bin/emacs")
+set_alias("emacs-client", "${emacs_dir}/bin/emacsclient")
+EOF
+
+cat <<'EOF' > ~/.zshrc.valkyrie 
+module load emacs
+if module load tmux; then
+  emacs --daemon="tmux-$TMUX_PANE"
+  alias emacs="emacsclient -s \"tmux-$TMUX_PANE\""module load tmux
+fi  
 EOF
