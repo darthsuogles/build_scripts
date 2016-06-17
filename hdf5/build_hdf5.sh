@@ -4,9 +4,7 @@ source ../build_pkg.sh
 
 set -ex
 
-if ! module load szlib; then
-    guess_build_pkg szlib "http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz" -d "openmpi"
-fi
+guess_build_pkg szlib "http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz" -d "openmpi"
 
 function c_fn() {
     module load szlib
