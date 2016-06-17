@@ -11,7 +11,7 @@ load_or_build_pkgs git
     mkdir -p linuxbrew && cd $_
     [ -d dev ] || git clone ${url} dev
     cd dev && git pull
-    git submodule update --init --remote --recursive
+    git submodule update --init --recursive
     export HOMEBREW_BUILD_FROM_SOURCE=yes
     export PATH=${PWD}/bin:${PATH}
     brew tap homebrew/dupes
