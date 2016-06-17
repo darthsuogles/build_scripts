@@ -22,7 +22,7 @@ function build_perl() {
     perlbrew switch perl-${INSTALLER_PERL_VERSION}
     perlbrew install-cpanm
 }
-[ "no" == "${BUILD_PERL}" ] || build_perl
+#[ "no" == "${BUILD_PERL}" ] || build_perl
 
 echo "source ${PERLBREW_ROOT}/etc/bashrc" >> ~/.zshrc.perl
-guess_print_modfile perlbrew dev
+guess_print_lua_modfile perlbrew dev http://xrl.us/perlbrewinstall
