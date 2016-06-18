@@ -14,7 +14,7 @@ function c_fn_mpi() {
                 --enable-parallel \
                 --with-szlib=${SZLIB_ROOT} \
                 --enable-shared=yes \
-                CXX=mpicxx \
+                CC=mpicc CXX=mpicxx \
                 CPPFLAGS="-I${OPENMPI_ROOT}/include -I${SZLIB_ROOT}/include" \
                 LDFLAGS="-Wl,-rpath=${OPENMPI_ROOT}/lib -L${OPENMPI_ROOT}/lib -Wl,-rpath=${SZLIB_ROOT}/lib -L${SZLIB_ROOT}/lib"
 }
