@@ -4,7 +4,8 @@ source ../build_pkg.sh
 
 set -ex
 
-#guess_build_pkg szlib "http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz" -d "openmpi"
+module load szlib || \
+    guess_build_pkg szlib "http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz" -d "openmpi"
 
 function c_fn_mpi() {
     module load szlib
@@ -43,8 +44,14 @@ function i_fn() {
 }
 
 USE_LATEST_VERSION=no
-guess_build_pkg hdf5 "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0/src/hdf5-1.10.0.tar.bz2" \
-                -t "parallel" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
 
-guess_build_pkg hdf5 "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0/src/hdf5-1.10.0.tar.bz2" \
-                -t "cxx" -c "c_fn_cxx" -b "b_fn" -i "i_fn" -d "openmpi szlib"
+# url=http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.17.tar.bz2
+# guess_build_pkg hdf5 "${url}" -t "pytables" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
+
+log_info "Building HDF5 1.10 Parallel"
+url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
+guess_build_pkg hdf5 "${url}" -t "parallel" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
+                
+# log_info "Building HDF5 1.10 C++"
+# url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
+# guess_build_pkg hdf5 "${url}" -t "cxx" -c "c_fn_cxx" -b "b_fn" -i "i_fn" -d "openmpi szlib"

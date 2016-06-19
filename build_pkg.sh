@@ -336,7 +336,7 @@ __EOF__
                 _resp_type=$(_wisper_fetch curl -sLI "${url}/${latest_tarball}" | \
 		                            perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
                 if [ "text/html" != "${_resp_type}" ]; then
-		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)/')
+		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\./')
                 fi
 	        fi
 	    fi
@@ -347,7 +347,8 @@ __EOF__
         local ver=${latest_ver}
         local tarball=${latest_tarball}
     else
-        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)/')
+        # greedy match: e.g. hdf5-1.10.1.tar.bz2 => ver=1.10.1
+        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\./')
     fi
     [ -n "${ver}" ] || quit_with "cannot get the correct version"
     local ver="$(echo "${ver}" | tr '_' '.')"
