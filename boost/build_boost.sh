@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ../build_pkg.sh
+source ../gen_modules.sh 
 
 set -ex
 
@@ -53,5 +54,11 @@ function b_fn() {
     return 0
 }
 
+deps="linuxbrew python openmpi bzip2"
 url=http://downloads.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.bz2 
-guess_build_pkg boost "${url}" -c "c_fn" -b "b_fn" -d "linuxbrew python openmpi bzip2"
+guess_build_pkg boost "${url}" -c "c_fn" -b "b_fn" -d "${deps}"
+
+USE_LATEST_VERSION=no
+url=http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.gz
+guess_build_pkg boost "${url}" -t skylark -c "c_fn" -b "b_fn" -d "${deps}"
+guess_print_lua_modfile boost 1.55.0-skylark "${url}" "${deps}"

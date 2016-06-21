@@ -288,7 +288,7 @@ EOF
     local pkg=$1; local _pkg_="${pkg}"
     local url=$2; local _url_="${url}"    
     shift 2
-    while getopts ":c:b:i:d:t:" opt "$@"; do
+    while getopts ":c:b:i:d:t:v:" opt "$@"; do
         case "${opt}" in 
             t) local build_type="${OPTARG}"
                ;;
@@ -299,6 +299,8 @@ EOF
             i) local install_fn="${OPTARG}"       
                ;;
             d) local deps_list="${OPTARG}"
+               ;;
+            v) local forced_version="${OPTARG}"
                ;;
             \?) quit_with "usage: guess_build_pkg <pkg> <url> [configure_fn] [make_fn] [make_install_fn]"
                 ;;
@@ -326,7 +328,7 @@ __EOF__
     local _provided_tarball=${tarball}
     [ -z "${tarball}" ] || local url=${url%/*}
 
-    if [ "no" != "${USE_LATEST_VERSION}" ]; then
+    if [ -z "${forced_version}" ] && [ "no" != "${USE_LATEST_VERSION}" ]; then
         log_info "attempt to get the latest version from the provided url"
         local _tb_list=($(_wisper_fetch curl -sL ${url} | find_tarball_name | sort -rV))
         local latest_tarball=${_tb_list[0]}
@@ -336,19 +338,22 @@ __EOF__
                 _resp_type=$(_wisper_fetch curl -sLI "${url}/${latest_tarball}" | \
 		                            perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
                 if [ "text/html" != "${_resp_type}" ]; then
-		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\./')
+		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\.\w+/')
                 fi
 	        fi
 	    fi
     fi
 
-    if [ -n "${latest_ver}" ]; then
+    if [ -n "${forced_version}" ]; then
+        log_info "using forced version ${forced_version}"
+        local ver=${forced_version}
+    elif [ -n "${latest_ver}" ]; then
         log_info "found version ${latest_ver} from user provided url"
         local ver=${latest_ver}
         local tarball=${latest_tarball}
     else
         # greedy match: e.g. hdf5-1.10.1.tar.bz2 => ver=1.10.1
-        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\./')
+        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\.\w+/')
     fi
     [ -n "${ver}" ] || quit_with "cannot get the correct version"
     local ver="$(echo "${ver}" | tr '_' '.')"
