@@ -1,15 +1,16 @@
 #!/bin/bash
 
-ver=3.2.4
-pkg=eigen
-
 source ../build_pkg.sh
+source ../gen_modules.sh 
 
-prepare_pkg $pkg http://bitbucket.org/eigen/eigen/get/$ver.tar.bz2 $ver install_dir
+function c_fn() {
+    mkdir -p build-tree && cd $_
+    CC=gcc CXX=g++ cmake \
+      -D CMAKE_INSTALL_PREFIX=$install_dir \
+      ..
+}
 
-cd $ver
-rm -fr build-tree; mkdir -p build-tree; cd build-tree
-CC=gcc CXX=g++ cmake \
-    -D CMAKE_INSTALL_PREFIX=$install_dir \
-    ..
-make install
+guess_build_pkg eigen http://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2 \
+                -c "c_fn"
+
+
