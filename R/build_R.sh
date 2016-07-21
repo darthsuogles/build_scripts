@@ -49,11 +49,13 @@ function configure_lto() {
                 --enable-R-profiling \
                 --enable-static \
                 --enable-shared \
+                --enable-R-shlib \
+                --enable-R-static-lib \
                 --with-blas --with-lapack \
                 --enable-lto \
                 CC=gcc CFLAGS="${CFLAGS} ${opt_flags}" \
                 CXX=g++ CXXFLAGS="${CXXFLAGS} ${opt_flags}" \
-                CXX1X=g++ CXX1XSTD="-std=c++11" \
+                CXX1X=g++ CXX1XSTD="-std=c++14" \
                 F77=gfortran FFLAGS="${opt_flags}" \
                 FC=gfortran FCFLAGS="${opt_flags}" \
                 CPPFLAGS="${CPPFLAGS} -I$(brew --prefix)/include" \
