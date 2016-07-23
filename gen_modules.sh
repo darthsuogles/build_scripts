@@ -87,8 +87,12 @@ function guess_print_lua_modfile() {
     shift 3
     local deps_str="${@}"
     local module_file="$(get_modulefiles_root)/${pkg}/${ver}.lua"
-
-    local pkg_dir="$(get_pkg_install_dir ${pkg} ${ver})"
+    if [ -z "${LUA_MODFILE_PKG_INSTALL_DIR}" ]; then
+        local pkg_dir="$(get_pkg_install_dir ${pkg} ${ver})"
+    else
+        log_info "using custom module install directory"
+        local pkg_dir="${LUA_MODFILE_PKG_INSTALL_DIR}"
+    fi
     if [ -z "${pkg_dir}" ] || [ ! -d "${pkg_dir}/" ]; then
         quit_with "cannot locate install location for ${pkg}/${ver}"
     fi
