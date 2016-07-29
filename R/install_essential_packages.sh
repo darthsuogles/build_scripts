@@ -23,7 +23,7 @@ EOF
 
 cat <<EOF | tee -a "${_fname}"
 install.packages(c("Rcpp", "RcppEigen", "RcppArmadillo", "RInside", "RcppCNPy"))
-install.packages(c('glmnet', 'lmtest', 'portes', 'forecast', 'rugarch', 'FinTS', 'Rserve')
+install.packages(c('glmnet', 'lmtest', 'portes', 'forecast', 'rugarch', 'FinTS', 'Rserve'), dependencies=TRUE)
 EOF
 
 Rscript "${_fname}"
