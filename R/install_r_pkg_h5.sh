@@ -16,7 +16,7 @@ options(unzip = 'internal')
 
 _EOF_R_PKG_
 
-module load hdf5/5 szlib openmpi
+module load hdf5/1.10-cxx szlib openmpi
 library_flags="-Wl,-rpath=${HDF5_ROOT}/lib -L${HDF5_ROOT}/lib -Wl,-rpath=${OPENMPI_ROOT}/lib -L${OPENMPI_ROOT}/lib -Wl,-rpath=${SZLIB_ROOT}/lib -L${SZLIB_ROOT}/lib -Wl,-rpath=$(brew --prefix)/lib -L$(brew --prefix)/lib -L. -lmpi_cxx -lmpi -lhdf5_cpp -lhdf5 -lhdf5_hl -lhdf5_hl_cpp -lz -lm"
 include_flags="-I${HDF5_ROOT}/include -I${OPENMPI_ROOT}/include -I$(brew --prefix)/include"
 
