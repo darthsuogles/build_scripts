@@ -15,5 +15,5 @@ function c_fn() {
                 --disable-cpp    
 }
 
-url=https://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.38.tar.bz2 
+url=https://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.39.tar.bz2 
 guess_build_pkg pcre ${url} -c "c_fn" -d "bzip2 zlib"

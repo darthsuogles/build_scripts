@@ -16,8 +16,8 @@ load_or_build_pkgs curl
     export PATH=${PWD}/bin:${PATH}
     brew tap homebrew/dupes
     brew tap homebrew/science 
-    brew tap homebrew/python
-    brew install zlib bzip2 xz readline pcre
+    #brew tap homebrew/python
+    brew install zlib bzip2 xz readline
 )
 
 guess_print_lua_modfile linuxbrew dev ${url}
