@@ -23,6 +23,6 @@ done
 git commit -m "$msg"
 git push
 git push github <<EOF
-darthsuogles
-$(cat $HOME/GITHUB_TOKEN)
+darthsuogles\n
+$(cat $HOME/GITHUB_TOKEN)\n
 EOF
