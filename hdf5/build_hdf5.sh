@@ -45,13 +45,15 @@ function i_fn() {
 
 USE_LATEST_VERSION=no
 
-# url=http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.17.tar.bz2
-# guess_build_pkg hdf5 "${url}" -t "pytables" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
-
-# log_info "Building HDF5 1.10 Parallel"
-# url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
-# guess_build_pkg hdf5 "${url}" -t "parallel" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
-
-log_info "Building HDF5 1.10 C++"
-url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
-guess_build_pkg hdf5 "${url}" -t "cxx" -c "c_fn_cxx" -b "b_fn" -i "i_fn" -d "openmpi szlib"
+if [ -n "${BUILD_PYTABLES}" ]; then
+    url=http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.17.tar.bz2
+    guess_build_pkg hdf5 "${url}" -t "pytables" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
+elif [ -n "${BUILD_PARALLEL}" ]; then
+    log_info "Building HDF5 1.10 Parallel"
+    url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
+    guess_build_pkg hdf5 "${url}" -t "parallel" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
+else
+    log_info "Building HDF5 1.10 C++"
+    url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
+    guess_build_pkg hdf5 "${url}" -t "cxx" -c "c_fn_cxx" -b "b_fn" -i "i_fn" -d "openmpi szlib"
+fi
