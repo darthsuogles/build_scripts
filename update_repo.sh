@@ -1,6 +1,6 @@
 #!/bin/bash
 
-msg="routine update"
+msg="[AUTO-UPDATE]"
 while getopts ":m:h" OPTCMD; do
     case "${OPTCMD}" in
         m) msg="${OPTARG}"
@@ -22,7 +22,6 @@ done
 
 git commit -m "$msg"
 git push
-git push github <<EOF
-darthsuogles\n
-$(cat $HOME/GITHUB_TOKEN)\n
-EOF
+git push github <<STDIN_
+$(cat $HOME/.__GITHUB_TOKEN)
+STDIN_

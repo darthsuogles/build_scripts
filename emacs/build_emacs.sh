@@ -15,9 +15,9 @@ function configure_fn() {
 }
 
 USE_LATEST_VERSION=no
-ver=24.5
+ver=25.1
 url="http://gnu.mirrors.hoobly.com/gnu/emacs/emacs-${ver}.tar.xz"
-#guess_build_pkg emacs ${url} -c "configure_fn"
+guess_build_pkg emacs ${url} -c "configure_fn"
 guess_print_lua_modfile emacs ${ver} ${url} 
 
 [ -n "${emacs_dir}" ] || emacs_dir="$(get_install_root)/emacs/${ver}"
