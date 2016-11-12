@@ -11,6 +11,8 @@ source ../gen_modules.sh
 # "http://llvm.org/git/lld.git"
 # "http://llvm.org/git/libcxx.git" 
 
+llvm_ver=3.8.1
+
 function download() {
     local url=$1
     local extract_path=$2
@@ -22,16 +24,16 @@ function download() {
 
 function build_llvm() {
     (cd tools
-     download "http://llvm.org/releases/3.8.0/cfe-3.8.0.src.tar.xz" clang
-     #download "http://llvm.org/releases/3.8.0/lld-3.8.0.src.tar.xz" lld
-     download "http://llvm.org/releases/3.8.0/polly-3.8.0.src.tar.xz" polly
+     download "http://llvm.org/releases/${llvm_ver}/cfe-${llvm_ver}.src.tar.xz" clang
+     #download "http://llvm.org/releases/${llvm_ver}/lld-${llvm_ver}.src.tar.xz" lld
+     download "http://llvm.org/releases/${llvm_ver}/polly-${llvm_ver}.src.tar.xz" polly
     )
     (cd tools/clang/tools
-     download "http://llvm.org/releases/3.8.0/clang-tools-extra-3.8.0.src.tar.xz" extra
+     download "http://llvm.org/releases/${llvm_ver}/clang-tools-extra-${llvm_ver}.src.tar.xz" extra
      )
     (cd projects
-     download "http://llvm.org/releases/3.8.0/compiler-rt-3.8.0.src.tar.xz" compiler-rt
-     #download "http://llvm.org/releases/3.8.0/libcxx-3.8.0.src.tar.xz" libcxx
+     download "http://llvm.org/releases/${llvm_ver}/compiler-rt-${llvm_ver}.src.tar.xz" compiler-rt
+     #download "http://llvm.org/releases/${llvm_ver}/libcxx-${llvm_ver}.src.tar.xz" libcxx
     )    
     local llvm_src_dir=${PWD}
     mkdir -p ../llvm-build-tree && cd $_
@@ -44,5 +46,5 @@ function build_llvm() {
 }
 
 USE_LATEST_VERSION=no
-guess_build_pkg llvm http://llvm.org/releases/3.8.0/llvm-3.8.0.src.tar.xz \
+guess_build_pkg llvm http://llvm.org/releases/${llvm_ver}/llvm-${llvm_ver}.src.tar.xz \
                 -c "build_llvm"
