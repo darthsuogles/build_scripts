@@ -28,8 +28,8 @@ EOF
 
 cat <<'EOF' > ~/.zshrc.valkyrie 
 module load emacs
-if module load tmux; then
+if [ module load tmux ]; then
   emacs --daemon="tmux-$TMUX_PANE"
-  alias emacs="emacsclient -s \"tmux-$TMUX_PANE\""module load tmux
+  alias emacs="emacsclient -s \"tmux-$TMUX_PANE\""
 fi  
 EOF
