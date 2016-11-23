@@ -4,6 +4,7 @@ source ../build_pkg.sh
 source ../gen_modules.sh 
 
 export JAVA_HOME=/usr/lib/jvm/java-7-oracle
+#export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 
 # guess_print_lua_modfile bazel dev ${url}
 # cat <<EOF
@@ -12,7 +13,7 @@ export JAVA_HOME=/usr/lib/jvm/java-7-oracle
 # EOF
 # EOF
 
-ver=0.2.2b
+ver=0.4.0
 shfnm=bazel-${ver}-jdk7-installer-linux-x86_64.sh    
 url=https://github.com/bazelbuild/bazel/releases/download/${ver}/${shfnm}
 
@@ -24,7 +25,9 @@ url=https://github.com/bazelbuild/bazel/releases/download/${ver}/${shfnm}
 )
 
 bazel_dir=$(get_install_root)/bazel/${ver}
+
 cat <<EOF >> ~/.bashrc
 source ${bazel_dir}/lib/bazel/bin/bazel-complete.bash
 EOF
+
 guess_print_lua_modfile bazel ${ver} ${url}
