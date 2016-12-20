@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 _fname=$(mktemp "/tmp/__r_pkg_install.XXXXXXX.R")
 touch ${_fname}
 
