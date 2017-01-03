@@ -16,6 +16,6 @@ function configure_fn() {
 
 # https://github.com/Linuxbrew/homebrew-core/blob/master/Formula/python3.rb
 USE_LATEST_VERSION=no
-ver=3.5.2
+ver=3.6.0
 guess_build_pkg python "http://www.python.org/ftp/python/${ver}/Python-${ver}.tgz" \
     -c "configure_fn" -d "linuxbrew sqlite"

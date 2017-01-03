@@ -1,0 +1,6 @@
+#+TITLE: Python 
+
+* Numpy
+
+  We use a custom numeric library for =numpy=. 
+  This can be built from running =build_aux_pkgs.sh=.
