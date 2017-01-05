@@ -7,8 +7,18 @@ set -ex
 module load szlib || \
     guess_build_pkg szlib "http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz" -d "openmpi"
 
+function apply_flock_patch {    
+    if [[ -n "${APPLY_FLOCK_PATCH_V110}" ]]; then
+        local url_prefix="https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1"
+        local patch_diff="file-lock-removal.diff"
+        wget "${url_prefix}/patch/${patch_diff}"
+        patch -p0 < "${patch_diff}"
+    fi
+}
+
 function c_fn_mpi() {
-    module load szlib
+    apply_flock_patch
+    module load szlib    
     ./configure --prefix=${install_dir} \
                 --enable-build-mode=production \
                 --enable-optimization=high \
@@ -21,7 +31,8 @@ function c_fn_mpi() {
 }
 
 function c_fn_cxx() {
-    module load szlib
+    apply_flock_patch
+    module load szlib    
     ./configure --prefix=${install_dir} \
                 --enable-build-mode=production \
                 --enable-optimization=high \
@@ -50,10 +61,12 @@ if [ -n "${BUILD_PYTABLES}" ]; then
     guess_build_pkg hdf5 "${url}" -t "pytables" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
 elif [ -n "${BUILD_PARALLEL}" ]; then
     log_info "Building HDF5 1.10 Parallel"
+    APPLY_FLOCK_PATCH_V110=yes
     url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
     guess_build_pkg hdf5 "${url}" -t "parallel" -c "c_fn_mpi" -b "b_fn" -i "i_fn" -d "openmpi szlib"
 else
     log_info "Building HDF5 1.10 C++"
+    APPLY_FLOCK_PATCH_V110=yes
     url=http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0-patch1/src/hdf5-1.10.0-patch1.tar.bz2
     guess_build_pkg hdf5 "${url}" -t "cxx" -c "c_fn_cxx" -b "b_fn" -i "i_fn" -d "openmpi szlib"
 fi
