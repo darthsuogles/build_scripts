@@ -22,7 +22,9 @@ function c_fn_mpi() {
     ./configure --prefix=${install_dir} \
                 --enable-build-mode=production \
                 --enable-optimization=high \
+                --enable-unsupported \
                 --enable-parallel \
+                --enable-cxx \
                 --with-szlib=${SZLIB_ROOT} \
                 --enable-shared=yes \
                 CC=mpicc CXX=mpicxx \
@@ -55,6 +57,7 @@ function i_fn() {
 }
 
 USE_LATEST_VERSION=no
+BUILD_PARALLEL=yes
 
 if [ -n "${BUILD_PYTABLES}" ]; then
     url=http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.17.tar.bz2
