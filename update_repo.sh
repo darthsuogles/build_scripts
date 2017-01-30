@@ -19,7 +19,7 @@ pkgs=($(find $PWD -maxdepth 3 -type f \
 for _i_pkg in ${pkgs[@]}; do git add -f "${_i_pkg}"; done
 
 git commit -m "$msg"
-git push
+git push origin
 git push github <<STDIN_
 $(cat $HOME/.__GITHUB_TOKEN)
 STDIN_
