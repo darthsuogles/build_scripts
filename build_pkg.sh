@@ -1,9 +1,16 @@
 #!/bin/bash
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_script_dir_="${script_dir}"
-source ${script_dir}/common.sh
-source ${drgscl_local}/.env.sh
+_bsd_="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+script_dir="${_bsd_}"
+_script_dir_="${_bsd_}"
+
+source "${_bsd_}/../params.const.sh"
+source "${_bsd_}/../lib_pprint.sh"
+source "${drgscl_base}/.env.sh"
+source "${drgscl_infra_lmod_init}/bash"
+
+# TODO: remove this
+source "${_bsd_}/common.sh"
 
 function search_scratch_dirs() {   
     [[ $# != 1 ]] && quit_with "search_scratch_dirs <artifact_name>"
@@ -141,7 +148,7 @@ function fetch_tarball {
         [ -f ${tarball} ] || quit_with "failed to download [ $tarball ] 2nd attemp"
     fi
 
-    case "${postproc_flag}" in
+    case "${postproc_flag:-}" in
         zip)
 	        log_warn "[fetch_tarball]: after download, transform the zip file"
 	        local zip_fnm=$(unzip -ql $tarball | \
@@ -201,10 +208,10 @@ function update_pkg()
     
     log_info "Uncompressing ... might take a while ... please be patient"
     fname=`tar -$tar_args $tarball | sed -e 's@/.*@@' | uniq`    
-    [ -d $fname ] || quit_with "[update_pkg]: cannot find the extracted directory"
-    [ "$fname" == "$ver" ] || mv $fname $ver
-    [ -d $ver ] || quit_with "[update_pkg]: failed to create directory $PWD/$ver"
-    [ "yes" == "${FORCE_REMOVE_TARBALL}" ] && rm $tarball
+    [[ -d $fname ]] || quit_with "[update_pkg]: cannot find the extracted directory"
+    [[ "$fname" == "$ver" ]] || mv $fname $ver
+    [[ -d $ver ]] || quit_with "[update_pkg]: failed to create directory $PWD/$ver"
+    [[ "yes" == "${FORCE_REMOVE_TARBALL:-no}" ]] && rm $tarball
     return 0
 }
 
@@ -308,55 +315,56 @@ EOF
     cat <<__EOF__
      pkg          : ${pkg}
      url          : ${url}
-     configure_fn : ${configure_fn}
-     build_fn     : ${build_fn}
-     install_fn   : ${install_fn}
-     dependencies : ${deps_list}
+     configure_fn : ${configure_fn:-}
+     build_fn     : ${build_fn:-}
+     install_fn   : ${install_fn:-}
+     dependencies : ${deps_list:-}
 __EOF__
 
     local _curr_pkg="${pkg}"
-    log_info "${deps_list}"
-    local pkg="NO_SUCH_PKG"
-    load_or_build_pkgs "${deps_list}"
-    local pkg="${_curr_pkg}"
-    log_info "restored name: ${pkg}"
+    if [[ -n "${deps_list:-}" ]]; then
+	log_info "dependencies: ${deps_list}"
+	local pkg="NO_SUCH_PKG"
+	load_or_build_pkgs "${deps_list}"
+	local pkg="${_curr_pkg}"
+	log_info "restored name: ${pkg}"
+    fi
 
     local tarball=$(echo $(basename ${url}) | find_tarball_name)
     local _provided_tarball=${tarball}
     [ -z "${tarball}" ] || local url=${url%/*}
 
-    if [ -z "${forced_version}" ] && [ "no" != "${USE_LATEST_VERSION}" ]; then
+    if [ -z "${forced_version:-}" ] && [ "no" != "${USE_LATEST_VERSION:-}" ]; then
         log_info "attempt to get the latest version from the provided url"
-        local _tb_list=($(_wisper_fetch curl -sL ${url} | find_tarball_name | sort -rV))
-        local latest_tarball=${_tb_list[0]}
-	    if [ -n "${latest_tarball}" ]; then
+        local latest_tarball="$(_wisper_fetch curl -sL ${url} | find_tarball_name | sort -rV | head -n1)"
+	if [ -n "${latest_tarball}" ]; then
             local _resp_code="$(_wisper_fetch curl -sLi -o /dev/null -w "%{http_code}" "${url}/${latest_tarball}")"
             if [ "200" == "${_resp_code}" ]; then
                 _resp_type=$(_wisper_fetch curl -sLI "${url}/${latest_tarball}" | \
-		                            perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
+		                    perl -ne 'print $1 if /Content-Type:\s+([^\s;]+);?/')
                 if [ "text/html" != "${_resp_type}" ]; then
-		            local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\.\w+/')
+		    local latest_ver=$(echo ${latest_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\.\w+/')
                 fi
-	        fi
 	    fi
+	fi
     fi
 
-    if [ -n "${forced_version}" ]; then
+    if [ -n "${forced_version:-}" ]; then
         log_info "using forced version ${forced_version}"
-        local ver=${forced_version}
-    elif [ -n "${latest_ver}" ]; then
+        local ver="${forced_version:-}"
+    elif [ -n "${latest_ver:-}" ]; then
         log_info "found version ${latest_ver} from user provided url"
-        local ver=${latest_ver}
-        local tarball=${latest_tarball}
+        local ver="${latest_ver:-}"
+        local tarball="${latest_tarball:-}"
     else
         # greedy match: e.g. hdf5-1.10.1.tar.bz2 => ver=1.10.1
-        local ver=$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\.\w+/')
+        local ver="$(echo ${_provided_tarball} | perl -ne 'print $1 if /(\d+([\._]\d+)*)\.\w+/')"
     fi
-    [ -n "${ver}" ] || quit_with "cannot get the correct version"
+    [[ -n "${ver}" ]] || quit_with "cannot get the correct version"
     local ver="$(echo "${ver}" | tr '_' '.')"
 
-    [ -n "${build_type}" ] && local ver=${ver}-${build_type}
-    local _ver_=${ver}
+    [[ -n "${build_type:-}" ]] && local ver="${ver}-${build_type}"
+    local _ver_="${ver}"
     eval "${pkg}_ver=${ver}"    
 
     local PKG=$(echo ${pkg} | tr '[:lower:]' '[:upper:]')
@@ -367,18 +375,18 @@ __EOF__
     eval "${pkg}_dir=${install_dir}"
 
     cd $ver
-    if [ -n "${configure_fn}" ]; then        
-        eval ${configure_fn} "${install_dir}"
+    if [[ -n "${configure_fn:-}" ]]; then        
+        eval "${configure_fn:-}" "${install_dir}"
     else
         ./configure --prefix="${install_dir}"
     fi
-    if [ -n "${build_fn}" ]; then
-        eval ${build_fn}
+    if [[ -n "${build_fn:-}" ]]; then
+        eval "${build_fn:-}"
     else
         make -j32
     fi
-    if [ -n "${install_fn}" ]; then
-        eval ${install_fn}
+    if [[ -n "${install_fn:-}" ]]; then
+        eval "${install_fn:-}"
     else
         make install
     fi
@@ -391,6 +399,6 @@ __EOF__
 EOF
 
     source ${_script_dir_}/gen_modules.sh
-    guess_print_lua_modfile ${_pkg_} ${_ver_} ${_url_} "${deps_list}"
+    guess_print_lua_modfile ${_pkg_} ${_ver_} ${_url_} "${deps_list:-}"
     return 0
 }
