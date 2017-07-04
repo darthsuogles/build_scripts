@@ -1,13 +1,10 @@
 
-drgscl_root=${script_dir}/..
-drgscl_local=${HOME}/local/.drgscl
+_bsd_="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Logging Utilities
-function _log_msg() { >&2 printf "$(date '+%D %T %a (%Z)') [$1] [drgscl]:"; shift; >&2 echo "${@}\n"; }
-function log_info() { _log_msg "INFO" "${@}"; }
-function log_warn() { _log_msg "WARNING" "${@}"; }
-function log_warn() { _log_msg "ERROR" "${@}"; }
-function quit_with() { _log_msg "ERROR => quit" "${@}"; exit; }
+source ${_bsd_}/../lib_pprint.sh
+
+drgscl_root="${_bsd_}/.."
+drgscl_local="${HOME}/.drgscl"
 
 # Find Locations
 function get_drgscl_root() { echo ${drgscl_root}; }

@@ -3,7 +3,7 @@
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _script_dir_="${script_dir}"
 source ${script_dir}/common.sh
-source "$(get_install_root)/Lmod/dev/lmod/lmod/init/bash"
+source ${drgscl_local}/.env.sh
 
 function search_scratch_dirs() {   
     [[ $# != 1 ]] && quit_with "search_scratch_dirs <artifact_name>"
@@ -25,8 +25,7 @@ function find_scratch_dir() {
     echo ${scratch_dir}
 }
 
-function check_tarball()
-{
+function check_tarball {
     [ $# -eq 2 ] || quit_with "[check_tarball] usage: <tarball> <args_var>"
     local tarball=$1
     local _res_var=$2
@@ -80,8 +79,7 @@ alias curl='_wisper_fetch curl'
 
 # Download and decompress a package specified by an url containing the tarball
 # e.g. http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.5.0.tar.gz
-function fetch_tarball()
-{
+function fetch_tarball {
     [[ $# -eq 3 ]] || quit_with "[fectch_tarball] usage: <url> <ver> <tarball_var>"
     local url=$1
     local ver=$2
@@ -221,8 +219,7 @@ function get_pkg_install_dir() {
     echo ${_install_dir}
 }
 
-function prepare_pkg()
-{
+function prepare_pkg {
     [[ $# -eq 4 ]] || quit_with "Usage: build_pkg <pkg> <fpath> <ver> <install_dir_var>"
     local pkg_name=$1
     local pkg_fpath=$2

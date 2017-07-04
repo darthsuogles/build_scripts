@@ -3,13 +3,12 @@
 source ../build_pkg.sh 
 source ../gen_modules.sh
 
-url=https://github.com/Linuxbrew/linuxbrew.git
+url=https://github.com/Linuxbrew/brew.git
 
 (cd $(get_install_root)
     mkdir -p linuxbrew && cd $_
     [ -d dev ] || git clone ${url} dev
-    cd dev && git pull
-    git submodule update --init --recursive
+    cd dev && git pull && git submodule update --init --recursive
     export HOMEBREW_BUILD_FROM_SOURCE=yes
     export PATH=${PWD}/bin:${PATH}
     brew tap homebrew/dupes
