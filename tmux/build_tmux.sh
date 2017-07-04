@@ -2,7 +2,7 @@
 
 source ../build_pkg.sh
 
-ver=2.2
+ver=2.5
 function c_fn() {
     module load linuxbrew
     brew install ncurses
